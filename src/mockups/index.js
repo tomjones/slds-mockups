@@ -6,6 +6,7 @@ import ComponentShowcase from './ComponentShowcase';
 import CaseDueDateCalendar from './CaseDueDateCalendar';
 import DonorHousehold from './DonorHousehold';
 import OpportunityProducts from './OpportunityProducts';
+import AccountLexLayout from './AccountLexLayout';
 
 export const mockups = [
   {
@@ -37,5 +38,11 @@ export const mockups = [
     name: 'Opportunity Products',
     description: 'Add products to opportunities with inventory & ATP visibility',
     component: OpportunityProducts,
+  },
+  {
+    id: 'account-lex-layout',
+    name: 'Account Lightning Experience Layout',
+    description: 'Enhanced Account record page with multi-pharmacy performance visualization',
+    component: AccountLexLayout,
   },
 ];
