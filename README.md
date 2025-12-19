@@ -1,70 +1,95 @@
-# Getting Started with Create React App
+# SLDS Studio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React application for creating and viewing interactive mockups built with the Salesforce Lightning Design System (SLDS). This tool provides a gallery-based interface for showcasing screen flows and UI prototypes using official Salesforce design components.
 
-## Available Scripts
+## About This Application
 
-In the project directory, you can run:
+SLDS Studio is a mockup development platform that allows designers and developers to:
 
-### `npm start`
+- Create interactive UI prototypes using Salesforce Lightning Design System components
+- Browse and navigate between multiple mockups through a clean gallery interface
+- View mockups in full-screen mode for presentations and reviews
+- Quickly iterate on Salesforce UI designs without backend infrastructure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The application comes with several pre-built mockups including:
+- **Campaign Builder** - Screen flow for Opportunity campaign package selection
+- **Component Showcase** - Comprehensive examples of all SLDS React components
+- **Case Due Date Calendar** - One-click calendar for updating Case Due Date
+- **Donor Household** - Household record page for donor management system
+- **Opportunity Products** - Add products to opportunities with inventory & ATP visibility
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Technology Stack
 
-### `npm test`
+- **React** 18.3.1 - UI framework
+- **Salesforce Lightning Design System** - Design system and component library
+- **Create React App** - Project scaffolding and build tooling
+- **CRACO** - Configuration override for custom build settings
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js and npm installed on your system
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
 
-### `npm run eject`
+### Development
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Run the app in development mode:
+```bash
+npm run dev
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser. The page will reload when you make changes.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Building for Production
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Build the app for production:
+```bash
+npm run build
+```
+
+Builds the app to the `build` folder, optimized for deployment.
+
+### Running Tests
+
+Launch the test runner in interactive watch mode:
+```bash
+npm test
+```
+
+## Adding New Mockups
+
+1. Create your mockup component in `src/mockups/YourMockup.jsx`
+2. Import and register it in `src/mockups/index.js`:
+```javascript
+import YourMockup from './YourMockup';
+
+export const mockups = [
+  {
+    id: 'your-mockup',
+    name: 'Your Mockup Name',
+    description: 'Brief description of your mockup',
+    component: YourMockup,
+  },
+  // ... other mockups
+];
+```
+3. Refresh the page to see your mockup in the gallery
+
+## Deployment
+
+The application is configured for Heroku deployment with the `heroku-postbuild` script that automatically runs the build process. The production server uses `serve` to host the static build files.
 
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Salesforce Lightning Design System](https://www.lightningdesignsystem.com/)
+- [Design System React Components](https://react.lightningdesignsystem.com/)
+- [Create React App Documentation](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React Documentation](https://reactjs.org/)
