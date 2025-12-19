@@ -51,7 +51,7 @@ function App() {
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {/* Header */}
           <div style={{ marginBottom: '32px' }}>
-            <h1 className="slds-text-heading_large" style={{ color: '#080707' }}>SLDS Mockups</h1>
+            <h1 className="slds-text-heading_large" style={{ color: '#080707' }}>SLDS Studio</h1>
             <p className="slds-text-body_regular" style={{ color: '#706e6b', marginTop: '4px' }}>
               Salesforce Lightning Design System screen flow mockups
             </p>
