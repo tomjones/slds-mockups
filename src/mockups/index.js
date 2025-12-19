@@ -5,6 +5,7 @@ import CampaignBuilder from './CampaignBuilder';
 import ComponentShowcase from './ComponentShowcase';
 import CaseDueDateCalendar from './CaseDueDateCalendar';
 import DonorHousehold from './DonorHousehold';
+import OpportunityProducts from './OpportunityProducts';
 
 export const mockups = [
   {
@@ -30,5 +31,11 @@ export const mockups = [
     name: 'Donor Household',
     description: 'Household record page for donor management system',
     component: DonorHousehold,
+  },
+  {
+    id: 'opportunity-products',
+    name: 'Opportunity Products',
+    description: 'Add products to opportunities with inventory & ATP visibility',
+    component: OpportunityProducts,
   },
 ];
