@@ -26,20 +26,20 @@ const OpportunityProductsMockup = () => {
   const products = [
     {
       id: 'P001',
-      name: 'Industrial Valve - Model X200',
-      code: 'IV-X200',
-      sapCode: 'SAP-IV-200',
-      family: 'Industrial Valves',
-      description: 'Heavy-duty industrial valve for high-pressure systems',
+      name: 'GLB Custom Witch Hazel 2335 5X GL',
+      code: 'GLB-2335.5D',
+      sapCode: 'GLB-2335.5D',
+      family: 'Botanical',
+      description: 'Custom formulated witch hazel extract with enhanced potency',
       active: true,
       inventory: {
         totalOnHand: 245,
         orderedByCustomers: 120,
         orderedFromVendors: 50,
         warehouses: [
-          { name: 'Warehouse A - Seattle', available: 125, allocated: 45, leadTime: '2 days' },
-          { name: 'Warehouse B - Phoenix', available: 80, allocated: 35, leadTime: '3 days' },
-          { name: 'Warehouse C - Atlanta', available: 40, allocated: 40, leadTime: '5 days' }
+          { name: '01 - Hazlet', available: 125, allocated: 45, leadTime: '2 days' },
+          { name: '02 - Crown', available: 80, allocated: 35, leadTime: '3 days' },
+          { name: '06 - Vigon', available: 40, allocated: 40, leadTime: '5 days' }
         ],
         batches: [
           { number: 'BATCH-2024-001', expiration: '2026-06-15', quantity: 100, status: 'Good' },
@@ -52,24 +52,24 @@ const OpportunityProductsMockup = () => {
     },
     {
       id: 'P002',
-      name: 'Pressure Sensor - PS-500',
-      code: 'PS-500',
-      sapCode: 'SAP-PS-500',
-      family: 'Sensors',
-      description: 'High-precision pressure sensor for industrial applications',
+      name: 'GreenGard PA3',
+      code: 'GLE-10069',
+      sapCode: 'GLE-10069',
+      family: 'GreenGard',
+      description: 'Broad spectrum preservative for personal care applications',
       active: true,
       inventory: {
         totalOnHand: 45,
         orderedByCustomers: 80,
         orderedFromVendors: 100,
         warehouses: [
-          { name: 'Warehouse A - Seattle', available: 25, allocated: 20, leadTime: '2 days' },
-          { name: 'Warehouse B - Phoenix', available: 15, allocated: 10, leadTime: '3 days' },
-          { name: 'Warehouse C - Atlanta', available: 5, allocated: 5, leadTime: '7 days' }
+          { name: '01 - Hazlet', available: 25, allocated: 20, leadTime: '2 days' },
+          { name: '02 - Crown', available: 15, allocated: 10, leadTime: '3 days' },
+          { name: '03 - FMI', available: 5, allocated: 5, leadTime: '7 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-PS-001', expiration: '2025-02-28', quantity: 30, status: 'Short Expiration' },
-          { number: 'BATCH-2024-PS-002', expiration: '2026-08-15', quantity: 15, status: 'Good' }
+          { number: 'BATCH-2024-PA-001', expiration: '2025-02-28', quantity: 30, status: 'Short Expiration' },
+          { number: 'BATCH-2024-PA-002', expiration: '2026-08-15', quantity: 15, status: 'Good' }
         ]
       },
       defaultATP: 'In Stock – Expiration Short',
@@ -77,23 +77,23 @@ const OpportunityProductsMockup = () => {
     },
     {
       id: 'P003',
-      name: 'Control Panel - CP-1000',
-      code: 'CP-1000',
-      sapCode: 'SAP-CP-1000',
-      family: 'Control Systems',
-      description: 'Advanced control panel with digital display',
+      name: 'GreenSens P30 MB',
+      code: 'GLE-10095',
+      sapCode: 'GLE-10095',
+      family: 'GreenSens',
+      description: 'Emollient ester with excellent sensory properties',
       active: true,
       inventory: {
         totalOnHand: 8,
         orderedByCustomers: 25,
         orderedFromVendors: 0,
         warehouses: [
-          { name: 'Warehouse A - Seattle', available: 5, allocated: 5, leadTime: '2 days' },
-          { name: 'Warehouse B - Phoenix', available: 3, allocated: 2, leadTime: '4 days' },
-          { name: 'Warehouse C - Atlanta', available: 0, allocated: 0, leadTime: 'N/A' }
+          { name: '01 - Hazlet', available: 5, allocated: 5, leadTime: '2 days' },
+          { name: '04 - Koster Keunen', available: 3, allocated: 2, leadTime: '4 days' },
+          { name: '07 - Samples/R&D', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: [
-          { number: 'BATCH-2024-CP-001', expiration: 'N/A', quantity: 8, status: 'Good' }
+          { number: 'BATCH-2024-P30-001', expiration: 'N/A', quantity: 8, status: 'Good' }
         ]
       },
       defaultATP: 'Needs Production',
@@ -101,20 +101,20 @@ const OpportunityProductsMockup = () => {
     },
     {
       id: 'P004',
-      name: 'Flow Meter - FM-750',
-      code: 'FM-750',
-      sapCode: 'SAP-FM-750',
-      family: 'Meters',
-      description: 'Digital flow meter with remote monitoring capability',
+      name: 'ElderMax BF',
+      code: 'GLA-11005',
+      sapCode: 'GLA-11005',
+      family: 'Actives',
+      description: 'Elder berry fruit extract with antioxidant benefits',
       active: true,
       inventory: {
         totalOnHand: 0,
         orderedByCustomers: 15,
         orderedFromVendors: 0,
         warehouses: [
-          { name: 'Warehouse A - Seattle', available: 0, allocated: 0, leadTime: 'N/A' },
-          { name: 'Warehouse B - Phoenix', available: 0, allocated: 0, leadTime: 'N/A' },
-          { name: 'Warehouse C - Atlanta', available: 0, allocated: 0, leadTime: 'N/A' }
+          { name: '01 - Hazlet', available: 0, allocated: 0, leadTime: 'N/A' },
+          { name: '02 - Crown', available: 0, allocated: 0, leadTime: 'N/A' },
+          { name: '08 - Maine', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: []
       },
@@ -123,25 +123,195 @@ const OpportunityProductsMockup = () => {
     },
     {
       id: 'P005',
-      name: 'Safety Valve - SV-300',
-      code: 'SV-300',
-      sapCode: 'SAP-SV-300',
-      family: 'Safety Equipment',
-      description: 'Pressure relief safety valve with automatic shutoff',
+      name: 'GLB Royal Jelly 10GLY',
+      code: 'BH6300',
+      sapCode: 'BH6300',
+      family: 'Standards',
+      description: 'Royal jelly extract in glycerin for skin nourishment',
       active: true,
       inventory: {
         totalOnHand: 0,
         orderedByCustomers: 45,
         orderedFromVendors: 0,
         warehouses: [
-          { name: 'Warehouse A - Seattle', available: 0, allocated: 0, leadTime: 'N/A' },
-          { name: 'Warehouse B - Phoenix', available: 0, allocated: 0, leadTime: 'N/A' },
-          { name: 'Warehouse C - Atlanta', available: 0, allocated: 0, leadTime: 'N/A' }
+          { name: '01 - Hazlet', available: 0, allocated: 0, leadTime: 'N/A' },
+          { name: '05 - Blended Wax', available: 0, allocated: 0, leadTime: 'N/A' },
+          { name: '06 - Vigon', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: []
       },
       defaultATP: 'Backordered / Not Available',
       stockLevel: 'out'
+    },
+    {
+      id: 'P006',
+      name: 'GreenSolv Clear',
+      code: 'GLE-10081',
+      sapCode: 'GLE-10081',
+      family: 'GreenSolv',
+      description: 'Natural solvent for cosmetic formulations',
+      active: true,
+      inventory: {
+        totalOnHand: 180,
+        orderedByCustomers: 60,
+        orderedFromVendors: 200,
+        warehouses: [
+          { name: '01 - Hazlet', available: 95, allocated: 30, leadTime: '2 days' },
+          { name: '02 - Crown', available: 65, allocated: 20, leadTime: '3 days' },
+          { name: '03 - FMI', available: 20, allocated: 10, leadTime: '5 days' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-GS-101', expiration: '2027-03-15', quantity: 120, status: 'Good' },
+          { number: 'BATCH-2024-GS-102', expiration: '2026-09-30', quantity: 60, status: 'Good' }
+        ]
+      },
+      defaultATP: 'Available to Ship',
+      stockLevel: 'high'
+    },
+    {
+      id: 'P007',
+      name: 'GreenWax GL',
+      code: 'GLE-10054-020',
+      sapCode: 'GLE-10054-020',
+      family: 'GreenWax',
+      description: 'Glyceryl ester wax for emulsion stabilization',
+      active: true,
+      inventory: {
+        totalOnHand: 65,
+        orderedByCustomers: 40,
+        orderedFromVendors: 75,
+        warehouses: [
+          { name: '04 - Koster Keunen', available: 40, allocated: 20, leadTime: '2 days' },
+          { name: '05 - Blended Wax', available: 20, allocated: 15, leadTime: '3 days' },
+          { name: '01 - Hazlet', available: 5, allocated: 5, leadTime: '4 days' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-WX-501', expiration: 'N/A', quantity: 65, status: 'Good' }
+        ]
+      },
+      defaultATP: 'Available to Ship',
+      stockLevel: 'high'
+    },
+    {
+      id: 'P008',
+      name: 'GreenSoft PG5O',
+      code: 'GLE-10050',
+      sapCode: 'GLE-10050',
+      family: 'GreenSoft',
+      description: 'Plant-based emollient with silky skin feel',
+      active: true,
+      inventory: {
+        totalOnHand: 32,
+        orderedByCustomers: 55,
+        orderedFromVendors: 50,
+        warehouses: [
+          { name: '01 - Hazlet', available: 18, allocated: 12, leadTime: '2 days' },
+          { name: '06 - Vigon', available: 10, allocated: 8, leadTime: '3 days' },
+          { name: '02 - Crown', available: 4, allocated: 4, leadTime: '6 days' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-SF-201', expiration: '2026-01-20', quantity: 32, status: 'Good' }
+        ]
+      },
+      defaultATP: 'Available to Ship',
+      stockLevel: 'low'
+    },
+    {
+      id: 'P009',
+      name: 'Imbue Shea MB',
+      code: 'GLE-10101',
+      sapCode: 'GLE-10101',
+      family: 'Imbue',
+      description: 'Shea butter based multifunctional ingredient',
+      active: true,
+      inventory: {
+        totalOnHand: 15,
+        orderedByCustomers: 35,
+        orderedFromVendors: 0,
+        warehouses: [
+          { name: '01 - Hazlet', available: 10, allocated: 8, leadTime: '2 days' },
+          { name: '04 - Koster Keunen', available: 5, allocated: 3, leadTime: '3 days' },
+          { name: '07 - Samples/R&D', available: 0, allocated: 0, leadTime: 'N/A' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-IM-301', expiration: '2025-04-10', quantity: 15, status: 'Short Expiration' }
+        ]
+      },
+      defaultATP: 'In Stock – Expiration Short',
+      stockLevel: 'critical'
+    },
+    {
+      id: 'P010',
+      name: 'GLB Radigard SF',
+      code: 'GLB-10003',
+      sapCode: 'GLB-10003',
+      family: 'Radigard',
+      description: 'Sunflower seed extract with antioxidant properties',
+      active: true,
+      inventory: {
+        totalOnHand: 88,
+        orderedByCustomers: 45,
+        orderedFromVendors: 100,
+        warehouses: [
+          { name: '01 - Hazlet', available: 50, allocated: 25, leadTime: '2 days' },
+          { name: '06 - Vigon', available: 30, allocated: 15, leadTime: '3 days' },
+          { name: '08 - Maine', available: 8, allocated: 5, leadTime: '4 days' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-RG-401', expiration: '2026-12-31', quantity: 50, status: 'Good' },
+          { number: 'BATCH-2024-RG-402', expiration: '2025-06-15', quantity: 38, status: 'Short Expiration' }
+        ]
+      },
+      defaultATP: 'Available to Ship',
+      stockLevel: 'high'
+    },
+    {
+      id: 'P011',
+      name: 'GLE Green Tea Catechins',
+      code: 'GLE-10114',
+      sapCode: 'GLE-10114',
+      family: 'Essential Other',
+      description: 'Green tea extract rich in polyphenols',
+      active: true,
+      inventory: {
+        totalOnHand: 22,
+        orderedByCustomers: 30,
+        orderedFromVendors: 50,
+        warehouses: [
+          { name: '01 - Hazlet', available: 15, allocated: 10, leadTime: '2 days' },
+          { name: '02 - Crown', available: 5, allocated: 3, leadTime: '3 days' },
+          { name: '07 - Samples/R&D', available: 2, allocated: 2, leadTime: '5 days' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-GT-601', expiration: '2026-07-22', quantity: 22, status: 'Good' }
+        ]
+      },
+      defaultATP: 'Available to Ship',
+      stockLevel: 'low'
+    },
+    {
+      id: 'P012',
+      name: 'Vivify Plus',
+      code: 'GLA-11006',
+      sapCode: 'GLA-11006',
+      family: 'Actives',
+      description: 'Enhanced bioactive complex for skin revitalization',
+      active: true,
+      inventory: {
+        totalOnHand: 12,
+        orderedByCustomers: 28,
+        orderedFromVendors: 0,
+        warehouses: [
+          { name: '01 - Hazlet', available: 8, allocated: 6, leadTime: '2 days' },
+          { name: '07 - Samples/R&D', available: 4, allocated: 2, leadTime: '3 days' },
+          { name: '08 - Maine', available: 0, allocated: 0, leadTime: 'N/A' }
+        ],
+        batches: [
+          { number: 'BATCH-2024-VP-701', expiration: '2025-05-30', quantity: 12, status: 'Short Expiration' }
+        ]
+      },
+      defaultATP: 'In Stock – Expiration Short',
+      stockLevel: 'critical'
     }
   ];
 
@@ -209,18 +379,30 @@ const OpportunityProductsMockup = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card>
+      <Card heading="">
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '16px', marginBottom: '16px' }}>
-            <Input
-              label="Search Products"
-              placeholder="Search by name, product code, or SAP code..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              iconRight={
-                <Icon category="utility" name="search" size="x-small" style={{ fill: '#706e6b' }} />
-              }
-            />
+            <div>
+              <label className="slds-form-element__label" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+                Search Products
+              </label>
+              <div className="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                <Icon
+                  assistiveText={{ label: 'Search' }}
+                  category="utility"
+                  name="search"
+                  size="x-small"
+                  className="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default"
+                />
+                <input
+                  type="text"
+                  className="slds-input"
+                  placeholder="Search by name, product code, or SAP code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
             <div>
               <label className="slds-form-element__label" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
                 Product Family
@@ -231,11 +413,17 @@ const OpportunityProductsMockup = () => {
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
                 <option value="all">All Families</option>
-                <option value="Industrial Valves">Industrial Valves</option>
-                <option value="Sensors">Sensors</option>
-                <option value="Control Systems">Control Systems</option>
-                <option value="Meters">Meters</option>
-                <option value="Safety Equipment">Safety Equipment</option>
+                <option value="Actives">Actives</option>
+                <option value="Botanical">Botanical</option>
+                <option value="Essential Other">Essential Other</option>
+                <option value="GreenGard">GreenGard</option>
+                <option value="GreenSens">GreenSens</option>
+                <option value="GreenSolv">GreenSolv</option>
+                <option value="GreenSoft">GreenSoft</option>
+                <option value="GreenWax">GreenWax</option>
+                <option value="Imbue">Imbue</option>
+                <option value="Radigard">Radigard</option>
+                <option value="Standards">Standards</option>
               </select>
             </div>
           </div>
@@ -250,7 +438,7 @@ const OpportunityProductsMockup = () => {
 
       {/* Product Results Table */}
       <div style={{ marginTop: '16px' }}>
-        <Card>
+        <Card heading="">
           <div style={{ padding: '0' }}>
             <table className="slds-table slds-table_bordered slds-table_cell-buffer">
               <thead>
@@ -362,7 +550,7 @@ const OpportunityProductsMockup = () => {
         const isExpanded = expandedProduct === productId;
 
         return (
-          <Card key={productId} style={{ marginBottom: '16px' }}>
+          <Card key={productId} heading="" style={{ marginBottom: '16px' }}>
             <div style={{ padding: '16px' }}>
               {/* Product Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -549,7 +737,7 @@ const OpportunityProductsMockup = () => {
           Configure Opportunity Line Items
         </h2>
         <p className="slds-text-body_regular" style={{ color: '#706e6b' }}>
-          Specify quantity, pricing, warehouse, and ATP status for each product.
+          Specify quantity, pricing, and warehouse for each product.
         </p>
       </div>
 
@@ -560,7 +748,7 @@ const OpportunityProductsMockup = () => {
         const showWarning = lineItem.quantity > availableQty;
 
         return (
-          <Card key={productId} style={{ marginBottom: '16px' }}>
+          <Card key={productId} heading="" style={{ marginBottom: '16px' }}>
             <div style={{ padding: '16px' }}>
               {/* Product Header */}
               <div style={{ marginBottom: '16px' }}>
@@ -581,12 +769,12 @@ const OpportunityProductsMockup = () => {
                   style={{ marginBottom: '16px' }}
                 >
                   Requested quantity ({lineItem.quantity}) exceeds available inventory ({availableQty}).
-                  Please adjust or select appropriate ATP status.
+                  Please adjust the quantity or select a different warehouse.
                 </Alert>
               )}
 
               {/* Configuration Form */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                 <Input
                   label="Quantity"
                   type="number"
@@ -602,23 +790,34 @@ const OpportunityProductsMockup = () => {
                   required
                   errorText={showWarning ? "Exceeds available inventory" : null}
                 />
-                <Input
-                  label="Unit Price"
-                  type="number"
-                  value={lineItem.unitPrice || ''}
-                  onChange={(e) => {
-                    const newLineItems = { ...lineItems };
-                    newLineItems[productId] = {
-                      ...newLineItems[productId],
-                      unitPrice: parseFloat(e.target.value) || 0
-                    };
-                    setLineItems(newLineItems);
-                  }}
-                  iconLeft={
-                    <span style={{ marginRight: '4px' }}>$</span>
-                  }
-                  required
-                />
+                <div>
+                  <label className="slds-form-element__label slds-form-element__label_required" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+                    <abbr className="slds-required" title="required">* </abbr>
+                    Unit Price
+                  </label>
+                  <div className="slds-form-element__control">
+                    <div className="slds-input-has-icon slds-input-has-icon_left">
+                      <span className="slds-icon_container slds-icon-utility-dollar" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', zIndex: 1 }}>
+                        <span style={{ fontSize: '14px', color: '#706e6b' }}>$</span>
+                      </span>
+                      <input
+                        type="number"
+                        className="slds-input"
+                        style={{ paddingLeft: '1.75rem' }}
+                        value={lineItem.unitPrice || ''}
+                        onChange={(e) => {
+                          const newLineItems = { ...lineItems };
+                          newLineItems[productId] = {
+                            ...newLineItems[productId],
+                            unitPrice: parseFloat(e.target.value) || 0
+                          };
+                          setLineItems(newLineItems);
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="slds-form-element__label slds-form-element__label_required" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
                     <abbr className="slds-required" title="required">* </abbr>
@@ -641,31 +840,6 @@ const OpportunityProductsMockup = () => {
                     {product.inventory.warehouses.map((wh, idx) => (
                       <option key={idx} value={wh.name}>
                         {wh.name} ({wh.available} available)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="slds-form-element__label slds-form-element__label_required" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
-                    <abbr className="slds-required" title="required">* </abbr>
-                    ATP Status
-                  </label>
-                  <select
-                    className="slds-select"
-                    value={lineItem.atpStatus || product.defaultATP}
-                    onChange={(e) => {
-                      const newLineItems = { ...lineItems };
-                      newLineItems[productId] = {
-                        ...newLineItems[productId],
-                        atpStatus: e.target.value
-                      };
-                      setLineItems(newLineItems);
-                    }}
-                    required
-                  >
-                    {atpStatuses.map(status => (
-                      <option key={status.id} value={status.value}>
-                        {status.label}
                       </option>
                     ))}
                   </select>
@@ -720,7 +894,7 @@ const OpportunityProductsMockup = () => {
           </p>
         </div>
 
-        <Card>
+        <Card heading="">
           <div style={{ padding: '0' }}>
             <table className="slds-table slds-table_bordered slds-table_cell-buffer">
               <thead>
@@ -736,9 +910,6 @@ const OpportunityProductsMockup = () => {
                   </th>
                   <th scope="col" style={{ padding: '12px' }}>
                     <div className="slds-truncate">Warehouse</div>
-                  </th>
-                  <th scope="col" style={{ padding: '12px' }}>
-                    <div className="slds-truncate">ATP Status</div>
                   </th>
                   <th scope="col" style={{ padding: '12px', textAlign: 'right' }}>
                     <div className="slds-truncate">Total</div>
@@ -770,12 +941,6 @@ const OpportunityProductsMockup = () => {
                       <td style={{ padding: '12px' }}>
                         <div className="slds-truncate">{lineItem.warehouse || 'N/A'}</div>
                       </td>
-                      <td style={{ padding: '12px' }}>
-                        <Badge
-                          color={getATPBadgeColor(lineItem.atpStatus)}
-                          content={lineItem.atpStatus}
-                        />
-                      </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
                         <strong>${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                       </td>
@@ -785,7 +950,7 @@ const OpportunityProductsMockup = () => {
               </tbody>
               <tfoot>
                 <tr style={{ backgroundColor: '#f3f3f3' }}>
-                  <td colSpan="5" style={{ padding: '12px', textAlign: 'right' }}>
+                  <td colSpan="4" style={{ padding: '12px', textAlign: 'right' }}>
                     <strong className="slds-text-heading_small">Grand Total:</strong>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>
@@ -918,39 +1083,6 @@ const OpportunityProductsMockup = () => {
           {currentStep === 2 && <LineItemConfigurationScreen />}
           {currentStep === 3 && <ReviewScreen />}
         </div>
-
-        {/* Design Annotations */}
-        <Card style={{ marginTop: '24px' }}>
-          <div style={{ padding: '16px' }}>
-            <h3 className="slds-text-heading_small" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icon category="utility" name="info" size="x-small" />
-              Design Annotations
-            </h3>
-            <ul style={{ listStyle: 'disc inside', fontSize: '14px', color: '#706e6b' }}>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Multi-select:</strong> Users can select multiple products from the search results table
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Stock Indicators:</strong> Color-coded badges (green/yellow/red) show inventory levels at a glance
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Warehouse Breakdown:</strong> Detailed view of inventory across multiple warehouse locations
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Batch Details:</strong> Optional expandable section shows batch numbers and expiration dates
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>ATP Status:</strong> 5 predefined statuses help categorize product availability
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Validation:</strong> Warning alerts when requested quantity exceeds available inventory
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Navigation:</strong> Progress indicator allows backward navigation; forward requires completion
-              </li>
-            </ul>
-          </div>
-        </Card>
       </div>
     </div>
   );
