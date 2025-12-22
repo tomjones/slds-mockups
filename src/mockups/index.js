@@ -6,6 +6,7 @@ import ComponentShowcase from './ComponentShowcase';
 import CaseDueDateCalendar from './CaseDueDateCalendar';
 import DonorHousehold from './DonorHousehold';
 import ProductionOrders from './ProductionOrders';
+import OpportunityProducts from './OpportunityProducts';
 
 export const mockups = [
   {
@@ -37,5 +38,11 @@ export const mockups = [
     name: 'Production Orders',
     description: 'Manufacturing order overview with component visibility and material availability',
     component: ProductionOrders,
+  },
+  {
+    id: 'opportunity-products',
+    name: 'Opportunity Products',
+    description: 'Add products to opportunities with inventory & ATP visibility',
+    component: OpportunityProducts,
   },
 ];
