@@ -1,44 +1,117 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import IconSettings from '@salesforce/design-system-react/components/icon-settings';
 import { mockups } from './mockups';
 
 function App() {
   const [selectedMockup, setSelectedMockup] = useState(null);
+  const [isShareMode, setIsShareMode] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  // Check for share parameter in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share');
+
+    if (shareId) {
+      const sharedMockup = mockups.find(m => m.shareId === shareId);
+      if (sharedMockup) {
+        setSelectedMockup(sharedMockup);
+        setIsShareMode(true);
+      }
+    }
+  }, []);
 
   // If a mockup is selected, render it full-screen with a back button
   if (selectedMockup) {
     const MockupComponent = selectedMockup.component;
+
+    const handleShare = () => {
+      const shareUrl = `${window.location.origin}?share=${selectedMockup.shareId}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      });
+    };
+
     return (
       <IconSettings iconPath="/assets/icons">
-        <div style={{ minHeight: '100vh' }}>
-          {/* Floating back button */}
-          <button
-            onClick={() => setSelectedMockup(null)}
-            style={{
-              position: 'fixed',
-              top: '16px',
-              left: '16px',
-              zIndex: 9999,
-              backgroundColor: 'white',
-              border: '1px solid #d8dde6',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: '#3e3e3c',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Mockups
-          </button>
-          <MockupComponent />
+        <div style={{ minHeight: '100vh', backgroundColor: '#f3f3f3' }}>
+          {/* Floating back button - hidden in share mode */}
+          {!isShareMode && (
+            <button
+              onClick={() => setSelectedMockup(null)}
+              style={{
+                position: 'fixed',
+                top: '16px',
+                left: '16px',
+                zIndex: 9999,
+                backgroundColor: 'white',
+                border: '1px solid #d8dde6',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#3e3e3c',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Mockups
+            </button>
+          )}
+
+          {/* Floating share button - shown when not in share mode */}
+          {!isShareMode && (
+            <button
+              onClick={handleShare}
+              style={{
+                position: 'fixed',
+                top: '16px',
+                right: '16px',
+                zIndex: 9999,
+                backgroundColor: copySuccess ? '#2e844a' : '#0176d3',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                transition: 'all 0.2s'
+              }}
+            >
+              {copySuccess ? (
+                <>
+                  <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Link Copied!
+                </>
+              ) : (
+                <>
+                  <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  Share
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Wrapper to add consistent top padding for all mockups */}
+          <div style={{ paddingTop: '60px' }}>
+            <MockupComponent />
+          </div>
         </div>
       </IconSettings>
     );

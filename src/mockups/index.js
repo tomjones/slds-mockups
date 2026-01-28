@@ -8,7 +8,23 @@ import DonorHousehold from './DonorHousehold';
 import ProductionOrders from './ProductionOrders';
 import OpportunityProducts from './OpportunityProducts';
 
-export const mockups = [
+// Simple deterministic hash function to generate consistent share IDs
+const generateShareId = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to UUID-like format
+  const hex = Math.abs(hash).toString(16).padStart(8, '0');
+  const hash2 = Math.abs(hash * 7919).toString(16).padStart(8, '0');
+  const hash3 = Math.abs(hash * 7927).toString(16).padStart(8, '0');
+  const hash4 = Math.abs(hash * 7933).toString(16).padStart(8, '0');
+  return `${hex.slice(0,8)}-${hash2.slice(0,4)}-${hash3.slice(0,4)}-${hash4.slice(0,4)}-${hash2.slice(4,8)}${hex.slice(4,8)}`;
+};
+
+const mockupsBase = [
   {
     id: 'campaign-builder',
     name: 'Campaign Builder',
@@ -46,3 +62,9 @@ export const mockups = [
     component: OpportunityProducts,
   },
 ];
+
+// Auto-generate shareId for each mockup based on its id
+export const mockups = mockupsBase.map(mockup => ({
+  ...mockup,
+  shareId: generateShareId(mockup.id)
+}));
