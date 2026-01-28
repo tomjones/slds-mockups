@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 // Core Components
 import Button from '@salesforce/design-system-react/components/button';
@@ -27,6 +27,7 @@ import AccordionPanel from '@salesforce/design-system-react/components/accordion
 import VerticalNavigation from '@salesforce/design-system-react/components/vertical-navigation';
 import ProgressIndicator from '@salesforce/design-system-react/components/progress-indicator';
 import ProgressBar from '@salesforce/design-system-react/components/progress-bar';
+import Breadcrumb from '@salesforce/design-system-react/components/breadcrumb';
 
 // Data Display
 import DataTable from '@salesforce/design-system-react/components/data-table';
@@ -49,9 +50,19 @@ import ScopedNotification from '@salesforce/design-system-react/components/scope
 // Modals & Overlays
 import Modal from '@salesforce/design-system-react/components/modal';
 
+// New High-Priority Components
+import Lookup from '@salesforce/design-system-react/components/lookup';
+import MenuDropdown from '@salesforce/design-system-react/components/menu-dropdown';
+import MenuPicklist from '@salesforce/design-system-react/components/menu-picklist';
+import Tree from '@salesforce/design-system-react/components/tree';
+import PageHeader from '@salesforce/design-system-react/components/page-header';
+import Panel from '@salesforce/design-system-react/components/panel';
+import ExpandableSection from '@salesforce/design-system-react/components/expandable-section';
+import Notification from '@salesforce/design-system-react/components/notification';
+
 // Section Component for organizing the showcase
-const Section = ({ title, description, children }) => (
-  <div className="slds-m-bottom_large">
+const Section = ({ title, description, children, id }) => (
+  <div className="slds-m-bottom_large" id={id}>
     <div className="slds-p-bottom_small slds-border_bottom slds-m-bottom_medium">
       <h2 className="slds-text-heading_medium">{title}</h2>
       {description && (
@@ -72,7 +83,87 @@ const SubSection = ({ title, children }) => (
   </div>
 );
 
+// ComponentSection wrapper with full documentation support
+const ComponentSection = ({
+  name,
+  description,
+  keyProps = [],
+  bestPractices = [],
+  relatedComponents = [],
+  sldsUrl,
+  children
+}) => (
+  <div className="slds-m-bottom_x-large" id={name.toLowerCase().replace(/\s+/g, '-')}>
+    <Card
+      heading={name}
+      icon={<Icon category="standard" name="all" size="small" />}
+      headerActions={
+        sldsUrl && (
+          <Button
+            label="View Docs"
+            variant="neutral"
+            iconCategory="utility"
+            iconName="new_window"
+            iconSize="small"
+            onClick={() => window.open(sldsUrl, '_blank')}
+          />
+        )
+      }
+    >
+      <div className="slds-p-around_medium">
+        <p className="slds-text-body_regular slds-m-bottom_medium">{description}</p>
+
+        {keyProps.length > 0 && (
+          <div className="slds-m-bottom_medium">
+            <h3 className="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">Key Props</h3>
+            <div className="slds-grid slds-wrap" style={{gap: '8px'}}>
+              {keyProps.map(prop => <Badge key={prop} content={prop} color="light" />)}
+            </div>
+          </div>
+        )}
+
+        {bestPractices.length > 0 && (
+          <div className="slds-m-bottom_medium">
+            <h3 className="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">Best Practices</h3>
+            <ul className="slds-list_dotted">
+              {bestPractices.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {relatedComponents.length > 0 && (
+          <div className="slds-m-bottom_medium">
+            <h3 className="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">Related Components</h3>
+            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+              {relatedComponents.map(c => (
+                <a
+                  key={c}
+                  href={`#${c.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="slds-badge"
+                  style={{cursor: 'pointer'}}
+                >
+                  {c}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="slds-border_top slds-p-top_medium">
+          {children}
+        </div>
+      </div>
+    </Card>
+  </div>
+);
+
 const ComponentShowcase = () => {
+  // Main navigation state
+  const [mainActiveTab, setMainActiveTab] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCodeFor, setShowCodeFor] = useState({});
+  const [copiedCode, setCopiedCode] = useState(null);
+
   // State for interactive components
   const [inputValue, setInputValue] = useState('');
   const [textareaValue, setTextareaValue] = useState('');
@@ -133,21 +224,148 @@ const ComponentShowcase = () => {
   );
   StatusCell.displayName = DataTableCell.displayName;
 
+  // Example wrapper with code toggle functionality
+  const Example = ({ title, code, children }) => {
+    const exampleId = `${title.replace(/\s+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`;
+
+    return (
+      <div className="slds-m-bottom_large">
+        <div className="slds-grid slds-grid_align-spread slds-m-bottom_small">
+          <h4 className="slds-text-heading_small">{title}</h4>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button
+              label={showCodeFor[exampleId] ? 'Hide Code' : 'Show Code'}
+              variant="neutral"
+              iconCategory="utility"
+              iconName="code"
+              iconSize="small"
+              onClick={() => setShowCodeFor(prev => ({
+                ...prev,
+                [exampleId]: !prev[exampleId]
+              }))}
+            />
+            {showCodeFor[exampleId] && (
+              <Button
+                label={copiedCode === exampleId ? 'Copied!' : 'Copy'}
+                variant={copiedCode === exampleId ? 'success' : 'neutral'}
+                iconCategory="utility"
+                iconName="copy"
+                iconSize="small"
+                onClick={() => {
+                  navigator.clipboard.writeText(code);
+                  setCopiedCode(exampleId);
+                  setTimeout(() => setCopiedCode(null), 2000);
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="slds-box slds-box_small slds-theme_shade slds-m-bottom_x-small">
+          {children}
+        </div>
+
+        {showCodeFor[exampleId] && (
+          <div className="slds-box" style={{backgroundColor: '#f4f6f9', overflowX: 'auto'}}>
+            <pre style={{margin: 0, fontSize: '12px', fontFamily: 'Consolas, Monaco, monospace'}}>
+              <code>{code}</code>
+            </pre>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Component search index
+  const componentSearchIndex = useMemo(() => [
+    { name: 'Button', description: 'Triggers an action or event', category: 'Basic', tab: 0, keywords: ['action', 'click', 'trigger'], id: 'button' },
+    { name: 'Icon', description: 'Visual symbols and graphics', category: 'Basic', tab: 0, keywords: ['symbol', 'graphic'], id: 'icon' },
+    { name: 'Badge', description: 'Status indicators and labels', category: 'Basic', tab: 0, keywords: ['status', 'label', 'tag'], id: 'badge' },
+    { name: 'Avatar', description: 'User and entity profile images', category: 'Basic', tab: 0, keywords: ['profile', 'picture', 'user'], id: 'avatar' },
+    { name: 'Pill', description: 'Removable tags and filters', category: 'Basic', tab: 0, keywords: ['tag', 'filter', 'chip'], id: 'pill' },
+    { name: 'Input', description: 'Text input field for forms', category: 'Forms', tab: 1, keywords: ['text', 'field', 'form'], id: 'input' },
+    { name: 'Textarea', description: 'Multi-line text input', category: 'Forms', tab: 1, keywords: ['text', 'multiline'], id: 'textarea' },
+    { name: 'Checkbox', description: 'Binary selection control', category: 'Forms', tab: 1, keywords: ['select', 'toggle'], id: 'checkbox' },
+    { name: 'Radio', description: 'Single selection from options', category: 'Forms', tab: 1, keywords: ['select', 'option'], id: 'radio' },
+    { name: 'Combobox', description: 'Searchable dropdown selection', category: 'Forms', tab: 1, keywords: ['dropdown', 'select', 'search'], id: 'combobox' },
+    { name: 'Datepicker', description: 'Date selection calendar', category: 'Forms', tab: 1, keywords: ['date', 'calendar'], id: 'datepicker' },
+    { name: 'Timepicker', description: 'Time selection input', category: 'Forms', tab: 1, keywords: ['time', 'clock'], id: 'timepicker' },
+    { name: 'Slider', description: 'Range input control', category: 'Forms', tab: 1, keywords: ['range', 'value'], id: 'slider' },
+    { name: 'DataTable', description: 'Tabular data display', category: 'Data', tab: 2, keywords: ['table', 'grid', 'data'], id: 'data-table' },
+    { name: 'Card', description: 'Content container with header', category: 'Data', tab: 2, keywords: ['container', 'panel'], id: 'card' },
+    { name: 'Accordion', description: 'Expandable content sections', category: 'Data', tab: 2, keywords: ['expand', 'collapse'], id: 'accordion' },
+    { name: 'Tabs', description: 'Tabbed navigation', category: 'Data', tab: 2, keywords: ['navigation', 'switch'], id: 'tabs' },
+    { name: 'Vertical Navigation', description: 'Sidebar navigation menu', category: 'Data', tab: 2, keywords: ['menu', 'sidebar'], id: 'vertical-navigation' },
+    { name: 'Breadcrumbs', description: 'Navigation trail', category: 'Data', tab: 2, keywords: ['navigation', 'path'], id: 'breadcrumbs' },
+    { name: 'Progress Indicator', description: 'Multi-step process', category: 'Data', tab: 2, keywords: ['steps', 'wizard'], id: 'progress-indicator' },
+    { name: 'Alert', description: 'Banner notifications', category: 'Feedback', tab: 3, keywords: ['notification', 'message'], id: 'alert' },
+    { name: 'Toast', description: 'Temporary notifications', category: 'Feedback', tab: 3, keywords: ['notification', 'message'], id: 'toast' },
+    { name: 'Modal', description: 'Overlay dialog windows', category: 'Feedback', tab: 3, keywords: ['dialog', 'popup'], id: 'modal' },
+    { name: 'Spinner', description: 'Loading indicators', category: 'Feedback', tab: 3, keywords: ['loading', 'progress'], id: 'spinner' },
+    { name: 'Progress Bar', description: 'Linear progress indicator', category: 'Feedback', tab: 3, keywords: ['loading', 'progress'], id: 'progress-bar' },
+    { name: 'Tooltip', description: 'Contextual help text', category: 'Feedback', tab: 3, keywords: ['help', 'hint'], id: 'tooltip' },
+    { name: 'Popover', description: 'Contextual information overlay', category: 'Feedback', tab: 3, keywords: ['overlay', 'info'], id: 'popover' },
+    { name: 'Scoped Notification', description: 'Inline alerts', category: 'Feedback', tab: 3, keywords: ['alert', 'message'], id: 'scoped-notification' },
+    { name: 'MenuDropdown', description: 'Action menu dropdown', category: 'Advanced', tab: 4, keywords: ['menu', 'dropdown', 'actions'], id: 'menudropdown' },
+    { name: 'Lookup', description: 'Record search and selection', category: 'Advanced', tab: 4, keywords: ['search', 'select', 'record'], id: 'lookup' },
+    { name: 'Tree', description: 'Hierarchical data display', category: 'Advanced', tab: 4, keywords: ['hierarchy', 'tree', 'nested'], id: 'tree' },
+    { name: 'PageHeader', description: 'Page title and actions', category: 'Advanced', tab: 4, keywords: ['header', 'title'], id: 'pageheader' },
+    { name: 'Panel', description: 'Sliding panel overlay', category: 'Advanced', tab: 4, keywords: ['drawer', 'sidebar'], id: 'panel' },
+    { name: 'ExpandableSection', description: 'Collapsible content area', category: 'Advanced', tab: 4, keywords: ['collapse', 'expand'], id: 'expandablesection' },
+    { name: 'Notification', description: 'Global notification banner', category: 'Advanced', tab: 4, keywords: ['alert', 'banner'], id: 'notification' },
+  ], []);
+
+  // Search results
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+
+    const query = searchQuery.toLowerCase();
+    return componentSearchIndex.filter(comp =>
+      comp.name.toLowerCase().includes(query) ||
+      comp.description.toLowerCase().includes(query) ||
+      comp.keywords.some(kw => kw.toLowerCase().includes(query))
+    );
+  }, [searchQuery, componentSearchIndex]);
+
   return (
     <div className="slds-p-around_large" style={{ backgroundColor: '#f3f3f3', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Page Header */}
         <div className="slds-box slds-theme_default slds-m-bottom_large">
-          <div className="slds-p-around_medium">
-            <div className="slds-media slds-media_center">
-              <div className="slds-media__figure">
-                <Icon category="standard" name="all" size="large" />
+          <div className="slds-grid slds-grid_vertical-align-center slds-p-around_medium">
+            <div className="slds-col slds-size_2-of-3">
+              <div className="slds-media slds-media_center">
+                <div className="slds-media__figure">
+                  <Icon category="standard" name="all" size="large" />
+                </div>
+                <div className="slds-media__body">
+                  <h1 className="slds-text-heading_large">SLDS Component Showcase</h1>
+                  <p className="slds-text-body_regular slds-text-color_weak">
+                    Comprehensive, interactive examples for developers building mockups and production code
+                  </p>
+                </div>
               </div>
-              <div className="slds-media__body">
-                <h1 className="slds-text-heading_large">SLDS React Component Showcase</h1>
-                <p className="slds-text-body_regular slds-text-color_weak">
-                  Comprehensive examples of all available Salesforce Lightning Design System React components
-                </p>
+            </div>
+            <div className="slds-col slds-size_1-of-3">
+              <div className="slds-form-element">
+                <div className="slds-form-element__control">
+                  <div className="slds-input-has-icon slds-input-has-icon_left">
+                    <Icon
+                      assistiveText={{ label: 'Search' }}
+                      category="utility"
+                      name="search"
+                      size="x-small"
+                      className="slds-icon slds-input__icon slds-input__icon_left"
+                    />
+                    <input
+                      type="text"
+                      className="slds-input"
+                      placeholder="Search components..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -155,7 +373,7 @@ const ComponentShowcase = () => {
 
         {/* Toast Container */}
         {showToast && (
-          <ToastContainer>
+          <ToastContainer style={{ top: '60px' }}>
             <Toast
               labels={{ heading: 'Success!', details: 'Record has been saved successfully.' }}
               variant="success"
@@ -164,15 +382,77 @@ const ComponentShowcase = () => {
           </ToastContainer>
         )}
 
-        {/* Alert Container */}
+        {/* Alert Banners */}
         {showAlert && (
-          <AlertContainer className="slds-m-bottom_medium">
-            <Alert
-              labels={{ heading: 'This is an informational alert banner', headingLink: 'Learn More' }}
-              onClickHeadingLink={() => console.log('Link clicked')}
-              onRequestClose={() => setShowAlert(false)}
-            />
-          </AlertContainer>
+          <div className="slds-m-bottom_medium">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Alert
+                labels={{ heading: 'This is an informational alert banner', headingLink: 'Learn More' }}
+                variant="info"
+                icon={<Icon category="utility" name="info" />}
+                onClickHeadingLink={() => console.log('Link clicked')}
+              />
+              <Alert
+                labels={{ heading: 'This is a success alert banner', details: 'Your changes have been saved successfully.' }}
+                variant="success"
+                icon={<Icon category="utility" name="success" />}
+              />
+              <Alert
+                labels={{ heading: 'This is a warning alert banner', details: 'Please review the following items before proceeding.' }}
+                variant="warning"
+                icon={<Icon category="utility" name="warning" />}
+              />
+              <Alert
+                labels={{ heading: 'This is an error alert banner', details: 'An error occurred while processing your request.' }}
+                variant="error"
+                icon={<Icon category="utility" name="error" />}
+              />
+              <Alert
+                labels={{ heading: 'This is an offline alert banner', details: 'You are currently offline. Changes will sync when connection is restored.' }}
+                variant="offline"
+                icon={<Icon category="utility" name="offline" />}
+              />
+            </div>
+            <div style={{ marginTop: '12px', textAlign: 'right' }}>
+              <Button
+                label="Close All Alerts"
+                variant="neutral"
+                onClick={() => setShowAlert(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Search Results */}
+        {searchResults && searchResults.length > 0 && (
+          <Card heading={`Search Results (${searchResults.length})`} className="slds-m-bottom_medium">
+            <div className="slds-p-around_medium">
+              <div className="slds-grid slds-wrap slds-gutters_small">
+                {searchResults.map(result => (
+                  <div key={result.id} className="slds-col slds-size_1-of-3">
+                    <div
+                      className="slds-box slds-box_small"
+                      style={{cursor: 'pointer'}}
+                      onClick={() => {
+                        setMainActiveTab(result.tab);
+                        setSearchQuery('');
+                        setTimeout(() => {
+                          document.getElementById(result.id)?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                          });
+                        }, 100);
+                      }}
+                    >
+                      <h3 className="slds-text-heading_small">{result.name}</h3>
+                      <p className="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">{result.description}</p>
+                      <Badge content={result.category} color="light" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
         )}
 
         <div className="slds-grid slds-wrap slds-gutters">
@@ -181,8 +461,15 @@ const ComponentShowcase = () => {
             <div className="slds-box slds-theme_default">
               <div className="slds-p-around_medium">
 
-                {/* ==================== BUTTONS ==================== */}
-                <Section title="Buttons" description="Various button styles, variants, and states">
+                <Tabs
+                  id="component-showcase-main-tabs"
+                  onSelect={(index) => setMainActiveTab(index)}
+                  selectedIndex={mainActiveTab}
+                  variant="scoped"
+                >
+                  <TabsPanel label="Basic Components">
+                    {/* ==================== BUTTONS ==================== */}
+                <Section title="Buttons" description="Various button styles, variants, and states" id="button">
                   <SubSection title="Button Variants">
                     <div className="slds-grid slds-grid_vertical-align-center slds-wrap" style={{ gap: '8px' }}>
                       <Button label="Base" />
@@ -256,7 +543,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== ICONS ==================== */}
-                <Section title="Icons" description="Icon categories and sizes">
+                <Section title="Icons" description="Icon categories and sizes" id="icon">
                   <SubSection title="Standard Icons">
                     <div className="slds-grid slds-grid_vertical-align-center" style={{ gap: '16px' }}>
                       <Icon category="standard" name="account" size="small" title="Account" />
@@ -304,7 +591,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== BADGES ==================== */}
-                <Section title="Badges" description="Status indicators and labels">
+                <Section title="Badges" description="Status indicators and labels" id="badge">
                   <div className="slds-grid slds-grid_vertical-align-center slds-wrap" style={{ gap: '8px' }}>
                     <Badge content="Default" />
                     <Badge content="Success" color="success" />
@@ -316,7 +603,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== AVATARS ==================== */}
-                <Section title="Avatars" description="User and entity profile images">
+                <Section title="Avatars" description="User and entity profile images" id="avatar">
                   <SubSection title="Avatar Sizes">
                     <div className="slds-grid slds-grid_vertical-align-center" style={{ gap: '16px' }}>
                       <Avatar variant="user" size="x-small" label="XS" />
@@ -335,7 +622,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== PILLS ==================== */}
-                <Section title="Pills" description="Removable tags and filters">
+                <Section title="Pills" description="Removable tags and filters" id="pill">
                   <div className="slds-grid slds-grid_vertical-align-center slds-wrap" style={{ gap: '8px' }}>
                     <Pill labels={{ label: 'Basic Pill' }} />
                     <Pill
@@ -349,9 +636,11 @@ const ComponentShowcase = () => {
                     <Pill labels={{ label: 'Error' }} hasError />
                   </div>
                 </Section>
+                  </TabsPanel>
 
+                  <TabsPanel label="Form Components">
                 {/* ==================== FORM INPUTS ==================== */}
-                <Section title="Form Inputs" description="Text inputs, textareas, and other form fields">
+                <Section title="Form Inputs" description="Text inputs, textareas, and other form fields" id="input">
                   <div className="slds-grid slds-wrap slds-gutters">
                     <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
                       <Input
@@ -396,7 +685,7 @@ const ComponentShowcase = () => {
                         iconLeft={<Icon category="utility" name="search" size="x-small" />}
                       />
                     </div>
-                    <div className="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                    <div className="slds-col slds-size_1-of-1 slds-m-bottom_small" id="textarea">
                       <Textarea
                         label="Textarea"
                         placeholder="Enter longer text here..."
@@ -408,7 +697,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== CHECKBOXES & RADIOS ==================== */}
-                <Section title="Checkboxes & Radio Buttons" description="Selection controls">
+                <Section title="Checkboxes & Radio Buttons" description="Selection controls" id="checkbox">
                   <div className="slds-grid slds-wrap slds-gutters">
                     <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                       <SubSection title="Checkboxes">
@@ -432,7 +721,7 @@ const ComponentShowcase = () => {
                         />
                       </SubSection>
                     </div>
-                    <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2" id="radio">
                       <SubSection title="Radio Group">
                         <RadioGroup
                           labels={{ label: 'Select an option' }}
@@ -460,7 +749,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== COMBOBOX ==================== */}
-                <Section title="Combobox / Dropdown" description="Searchable dropdown selections">
+                <Section title="Combobox / Dropdown" description="Searchable dropdown selections" id="combobox">
                   <div className="slds-grid slds-wrap slds-gutters">
                     <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
                       <Combobox
@@ -490,7 +779,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== DATE & TIME PICKERS ==================== */}
-                <Section title="Date & Time Pickers" description="Date and time selection components">
+                <Section title="Date & Time Pickers" description="Date and time selection components" id="datepicker">
                   <div className="slds-grid slds-wrap slds-gutters">
                     <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
                       <Datepicker
@@ -499,7 +788,7 @@ const ComponentShowcase = () => {
                         value={selectedDate}
                       />
                     </div>
-                    <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
+                    <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small" id="timepicker">
                       <Timepicker
                         label="Time Picker"
                         onDateChange={(date, inputStr) => setSelectedTime(inputStr)}
@@ -510,7 +799,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== SLIDER ==================== */}
-                <Section title="Slider" description="Range input control">
+                <Section title="Slider" description="Range input control" id="slider">
                   <div style={{ maxWidth: '400px' }}>
                     <Slider
                       label={`Slider Value: ${sliderValue}`}
@@ -522,9 +811,11 @@ const ComponentShowcase = () => {
                     />
                   </div>
                 </Section>
+                  </TabsPanel>
 
+                  <TabsPanel label="Data & Layout">
                 {/* ==================== CARDS ==================== */}
-                <Section title="Cards" description="Content containers with optional headers and actions">
+                <Section title="Cards" description="Content containers with optional headers and actions" id="card">
                   <div className="slds-grid slds-wrap slds-gutters">
                     <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
                       <Card
@@ -567,7 +858,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== DATA TABLE ==================== */}
-                <Section title="Data Table" description="Tabular data display with sorting and actions">
+                <Section title="Data Table" description="Tabular data display with sorting and actions" id="data-table">
                   <Card heading="Accounts">
                     <DataTable
                       items={tableItems}
@@ -590,7 +881,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== TABS ==================== */}
-                <Section title="Tabs" description="Tabbed navigation for content organization">
+                <Section title="Tabs" description="Tabbed navigation for content organization" id="tabs">
                   <Tabs
                     id="showcase-tabs"
                     onSelect={(index) => setActiveTab(index)}
@@ -615,7 +906,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== ACCORDION ==================== */}
-                <Section title="Accordion" description="Expandable content sections">
+                <Section title="Accordion" description="Expandable content sections" id="accordion">
                   <Accordion id="showcase-accordion">
                     <AccordionPanel
                       expanded={expandedPanels['panel1']}
@@ -651,7 +942,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== BREADCRUMBS ==================== */}
-                <Section title="Breadcrumbs" description="Navigation trail showing current location">
+                <Section title="Breadcrumbs" description="Navigation trail showing current location" id="breadcrumbs">
                   <nav role="navigation" aria-label="Breadcrumbs">
                     <ol className="slds-breadcrumb slds-list_horizontal slds-wrap">
                       <li className="slds-breadcrumb__item">
@@ -668,7 +959,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== VERTICAL NAVIGATION ==================== */}
-                <Section title="Vertical Navigation" description="Sidebar navigation menu">
+                <Section title="Vertical Navigation" description="Sidebar navigation menu" id="vertical-navigation">
                   <div style={{ maxWidth: '300px' }}>
                     <VerticalNavigation
                       categories={[
@@ -685,7 +976,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== PROGRESS INDICATOR ==================== */}
-                <Section title="Progress Indicator" description="Multi-step process indicator">
+                <Section title="Progress Indicator" description="Multi-step process indicator" id="progress-indicator">
                   <SubSection title="Step Progress">
                     <ProgressIndicator
                       steps={progressSteps}
@@ -712,15 +1003,45 @@ const ComponentShowcase = () => {
                   </SubSection>
 
                   <SubSection title="Progress Bar">
-                    <div style={{ maxWidth: '400px' }}>
+                    <div style={{ maxWidth: '400px' }} id="progress-bar">
                       <ProgressBar value={65} />
                       <p className="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">65% Complete</p>
                     </div>
                   </SubSection>
                 </Section>
+                  </TabsPanel>
+
+                  <TabsPanel label="Feedback & Overlays">
+
+                {/* ==================== ALERT ==================== */}
+                <Section title="Alert" description="Banner notifications for important messages" id="alert">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <Alert
+                      labels={{ heading: 'Informational alert banner', headingLink: 'Learn More' }}
+                      variant="info"
+                      icon={<Icon category="utility" name="info" />}
+                      onClickHeadingLink={() => console.log('Link clicked')}
+                    />
+                    <Alert
+                      labels={{ heading: 'Success alert banner', details: 'Your changes have been saved successfully.' }}
+                      variant="success"
+                      icon={<Icon category="utility" name="success" />}
+                    />
+                    <Alert
+                      labels={{ heading: 'Warning alert banner', details: 'Please review the following items before proceeding.' }}
+                      variant="warning"
+                      icon={<Icon category="utility" name="warning" />}
+                    />
+                    <Alert
+                      labels={{ heading: 'Error alert banner', details: 'An error occurred while processing your request.' }}
+                      variant="error"
+                      icon={<Icon category="utility" name="error" />}
+                    />
+                  </div>
+                </Section>
 
                 {/* ==================== TOOLTIPS & POPOVERS ==================== */}
-                <Section title="Tooltips & Popovers" description="Contextual information overlays">
+                <Section title="Tooltips & Popovers" description="Contextual information overlays" id="tooltip">
                   <div className="slds-grid slds-grid_vertical-align-center" style={{ gap: '32px' }}>
                     <Tooltip
                       content="This is a helpful tooltip"
@@ -729,18 +1050,20 @@ const ComponentShowcase = () => {
                       <Button label="Hover for Tooltip" variant="neutral" />
                     </Tooltip>
 
-                    <Popover
-                      body="This is popover content that appears on click. It can contain more detailed information."
-                      heading="Popover Title"
-                      align="top"
-                    >
-                      <Button label="Click for Popover" variant="neutral" />
-                    </Popover>
+                    <div id="popover">
+                      <Popover
+                        body="This is popover content that appears on click. It can contain more detailed information."
+                        heading="Popover Title"
+                        align="top"
+                      >
+                        <Button label="Click for Popover" variant="neutral" />
+                      </Popover>
+                    </div>
                   </div>
                 </Section>
 
                 {/* ==================== SPINNERS ==================== */}
-                <Section title="Spinners" description="Loading indicators">
+                <Section title="Spinners" description="Loading indicators" id="spinner">
                   <div className="slds-grid slds-grid_vertical-align-center" style={{ gap: '32px' }}>
                     <div className="slds-is-relative" style={{ height: '40px', width: '40px' }}>
                       <Spinner size="x-small" variant="base" assistiveText={{ label: 'X-Small Loading' }} />
@@ -758,7 +1081,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== SCOPED NOTIFICATIONS ==================== */}
-                <Section title="Scoped Notifications" description="Inline alerts and messages">
+                <Section title="Scoped Notifications" description="Inline alerts and messages" id="scoped-notification">
                   <div className="slds-grid slds-grid_vertical" style={{ gap: '12px' }}>
                     <ScopedNotification theme="light">
                       <p>This is a light scoped notification for general information.</p>
@@ -782,7 +1105,7 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== MODAL ==================== */}
-                <Section title="Modal" description="Overlay dialog windows">
+                <Section title="Modal" description="Overlay dialog windows" id="modal">
                   <Button
                     label="Open Modal"
                     variant="brand"
@@ -805,13 +1128,212 @@ const ComponentShowcase = () => {
                 </Section>
 
                 {/* ==================== TOAST ==================== */}
-                <Section title="Toast" description="Temporary notification messages">
+                <Section title="Toast" description="Temporary notification messages" id="toast">
                   <Button
                     label="Show Toast"
                     variant="success"
                     onClick={() => setShowToast(true)}
                   />
                 </Section>
+                  </TabsPanel>
+
+                  <TabsPanel label="Advanced & Specialized">
+
+                {/* ==================== MENUDROPDOWN ==================== */}
+                <ComponentSection
+                  name="MenuDropdown"
+                  description="Displays actions or options in a dropdown menu. Essential for overflow actions and contextual menus."
+                  keyProps={['options', 'onSelect', 'assistiveText', 'align', 'buttonVariant']}
+                  bestPractices={[
+                    "Use for overflow actions that don't fit in the main UI",
+                    "Keep menu items to 7 or fewer for optimal usability",
+                    "Provide clear, action-oriented labels",
+                    "Group related actions using dividers"
+                  ]}
+                  relatedComponents={['Button', 'MenuPicklist']}
+                  sldsUrl="https://react.lightningdesignsystem.com/components/menu-dropdowns/"
+                >
+                  <Example
+                    title="Basic Actions Menu"
+                    code={`<MenuDropdown
+  assistiveText={{ icon: 'More Actions' }}
+  iconCategory="utility"
+  iconName="down"
+  iconVariant="border-filled"
+  onSelect={(option) => console.log('Selected:', option.value)}
+  options={[
+    { label: 'Edit', value: 'edit' },
+    { label: 'Delete', value: 'delete' },
+    { label: 'Clone', value: 'clone' }
+  ]}
+/>`}
+                  >
+                    <MenuDropdown
+                      assistiveText={{ icon: 'More Actions' }}
+                      iconCategory="utility"
+                      iconName="down"
+                      iconVariant="border-filled"
+                      onSelect={(option) => console.log('Selected:', option.value)}
+                      options={[
+                        { label: 'Edit', value: 'edit' },
+                        { label: 'Delete', value: 'delete' },
+                        { label: 'Clone', value: 'clone' }
+                      ]}
+                    />
+                  </Example>
+
+                  <Example
+                    title="Menu with Icons"
+                    code={`<MenuDropdown
+  assistiveText={{ icon: 'Actions' }}
+  buttonVariant="icon"
+  iconCategory="utility"
+  iconName="settings"
+  iconSize="medium"
+  onSelect={(option) => console.log('Selected:', option.value)}
+  options={[
+    { label: 'Refresh', value: 'refresh', leftIcon: { category: 'utility', name: 'refresh' } },
+    { label: 'Edit', value: 'edit', leftIcon: { category: 'utility', name: 'edit' } },
+    { label: 'Settings', value: 'settings', leftIcon: { category: 'utility', name: 'settings' } }
+  ]}
+/>`}
+                  >
+                    <MenuDropdown
+                      assistiveText={{ icon: 'Actions' }}
+                      buttonVariant="icon"
+                      iconCategory="utility"
+                      iconName="settings"
+                      iconSize="medium"
+                      onSelect={(option) => console.log('Selected:', option.value)}
+                      options={[
+                        { label: 'Refresh', value: 'refresh', leftIcon: { category: 'utility', name: 'refresh' } },
+                        { label: 'Edit', value: 'edit', leftIcon: { category: 'utility', name: 'edit' } },
+                        { label: 'Settings', value: 'settings', leftIcon: { category: 'utility', name: 'settings' } }
+                      ]}
+                    />
+                  </Example>
+                </ComponentSection>
+
+                {/* ==================== LOOKUP ==================== */}
+                <ComponentSection
+                  name="Lookup"
+                  description="Searchable dropdown for selecting records from a dataset. Essential for Salesforce-style record selection."
+                  keyProps={['options', 'selection', 'onSearch', 'label', 'placeholder']}
+                  bestPractices={[
+                    "Use for selecting records from a large dataset",
+                    "Provide async search for performance with large datasets",
+                    "Show recently used items first when applicable",
+                    "Allow multi-select when users need to choose multiple records"
+                  ]}
+                  relatedComponents={['Combobox', 'MenuPicklist']}
+                  sldsUrl="https://react.lightningdesignsystem.com/components/lookups/"
+                >
+                  <Example
+                    title="Basic Lookup"
+                    code={`<Lookup
+  label="Search Accounts"
+  placeholder="Search accounts..."
+  options={[
+    { id: '1', label: 'Acme Corp', icon: { category: 'standard', name: 'account' } },
+    { id: '2', label: 'Global Industries', icon: { category: 'standard', name: 'account' } }
+  ]}
+  onSearch={(event, { value }) => console.log('Search:', value)}
+  onChange={(event, { selection }) => console.log('Selected:', selection)}
+/>`}
+                  >
+                    <Lookup
+                      label="Search Accounts"
+                      placeholder="Search accounts..."
+                      options={[
+                        { id: '1', label: 'Acme Corp', icon: { category: 'standard', name: 'account' } },
+                        { id: '2', label: 'Global Industries', icon: { category: 'standard', name: 'account' } },
+                        { id: '3', label: 'Tech Solutions', icon: { category: 'standard', name: 'account' } }
+                      ]}
+                      onSearch={(event, { value }) => console.log('Search:', value)}
+                      onChange={(event, { selection }) => console.log('Selected:', selection)}
+                    />
+                  </Example>
+                </ComponentSection>
+
+                {/* ==================== EXPANDABLESECTION ==================== */}
+                <ComponentSection
+                  name="ExpandableSection"
+                  description="Collapsible content area that can be expanded or collapsed. Perfect for organizing detailed information."
+                  keyProps={['title', 'isOpen', 'onToggleOpen']}
+                  bestPractices={[
+                    "Use for grouping related content that doesn't need to be immediately visible",
+                    "Provide clear section titles that indicate content",
+                    "Start in collapsed state for lengthy content",
+                    "Limit nesting to avoid confusion"
+                  ]}
+                  relatedComponents={['Accordion', 'Panel']}
+                  sldsUrl="https://react.lightningdesignsystem.com/components/expandable-section/"
+                >
+                  <Example
+                    title="Basic Expandable Section"
+                    code={`const [isOpen, setIsOpen] = useState(false);
+
+<ExpandableSection
+  title="Account Details"
+  isOpen={isOpen}
+  onToggleOpen={() => setIsOpen(!isOpen)}
+>
+  <div className="slds-p-around_medium">
+    <p>Hidden content that shows when expanded...</p>
+  </div>
+</ExpandableSection>`}
+                  >
+                    <ExpandableSection
+                      title="Account Details"
+                    >
+                      <div className="slds-p-around_medium">
+                        <p>This content is revealed when the section is expanded. Use this pattern for detailed information that doesn't need to be immediately visible.</p>
+                      </div>
+                    </ExpandableSection>
+                  </Example>
+                </ComponentSection>
+
+                {/* ==================== PAGEHEADER ==================== */}
+                <ComponentSection
+                  name="PageHeader"
+                  description="Standard page header with title, icon, and action buttons. Provides consistent page-level navigation."
+                  keyProps={['title', 'icon', 'onRenderActions', 'info', 'details']}
+                  bestPractices={[
+                    "Use at the top of every page for consistency",
+                    "Include relevant actions in the header actions area",
+                    "Show key record information in the details section",
+                    "Use appropriate icons for record types"
+                  ]}
+                  relatedComponents={['Icon', 'Button']}
+                  sldsUrl="https://react.lightningdesignsystem.com/components/page-headers/"
+                >
+                  <Example
+                    title="Record Home Header"
+                    code={`<PageHeader
+  icon={<Icon category="standard" name="account" />}
+  title="Acme Corporation"
+  info="Account • New York"
+  onRenderActions={() => (
+    <ButtonGroup>
+      <Button label="Edit" variant="neutral" />
+      <Button label="Delete" variant="destructive" />
+    </ButtonGroup>
+  )}
+/>`}
+                  >
+                    <PageHeader
+                      icon={<Icon category="standard" name="account" />}
+                      title="Acme Corporation"
+                      info="Account"
+                      onRenderActions={() => (
+                        <ButtonGroup>
+                          <Button label="Edit" variant="neutral" />
+                          <Button label="Delete" variant="destructive" />
+                        </ButtonGroup>
+                      )}
+                    />
+                  </Example>
+                </ComponentSection>
 
                 {/* ==================== UTILITY CLASSES ==================== */}
                 <Section title="Utility Classes Reference" description="Common SLDS utility classes for styling">
@@ -872,6 +1394,8 @@ const ComponentShowcase = () => {
                     </div>
                   </div>
                 </Section>
+                  </TabsPanel>
+                </Tabs>
 
               </div>
             </div>

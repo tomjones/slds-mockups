@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Button from '@salesforce/design-system-react/components/button';
 import Card from '@salesforce/design-system-react/components/card';
 import Checkbox from '@salesforce/design-system-react/components/checkbox';
 import Icon from '@salesforce/design-system-react/components/icon';
 import Input from '@salesforce/design-system-react/components/input';
 import ProgressIndicator from '@salesforce/design-system-react/components/progress-indicator';
-import DataTable from '@salesforce/design-system-react/components/data-table';
-import DataTableColumn from '@salesforce/design-system-react/components/data-table/column';
-import DataTableCell from '@salesforce/design-system-react/components/data-table/cell';
-import Combobox from '@salesforce/design-system-react/components/combobox';
 import Badge from '@salesforce/design-system-react/components/badge';
 import Alert from '@salesforce/design-system-react/components/alert';
-import Dropdown from '@salesforce/design-system-react/components/menu-dropdown';
+
+// Pack size options and pricing tiers (unit price per kg decreases with larger pack sizes)
+const packSizes = [
+  { size: '1kg', kg: 1, pricePerKg: 45.00 },
+  { size: '5kg', kg: 5, pricePerKg: 42.00 },
+  { size: '18kg', kg: 18, pricePerKg: 38.00 },
+  { size: '180kg', kg: 180, pricePerKg: 32.00 }
+];
 
 const OpportunityProductsMockup = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -22,11 +25,34 @@ const OpportunityProductsMockup = () => {
   const [lineItems, setLineItems] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Customer account and requirements
+  const customerAccount = {
+    name: 'Luxe Beauty Corporation',
+    businessPartnerNumber: '10234',
+    accountBalance: 24567.89,
+    daysOverdue: 15,
+    requirements: {
+      shelfLifeMinimum: 12, // months
+      qualityStandards: 'ISO 9001 Certified',
+      packagingRequirements: 'Eco-friendly packaging required'
+    }
+  };
+
+  // Opportunity information
+  const opportunity = {
+    name: 'Q1 2025 Industrial Equipment Deal',
+    closeDate: '2025-03-31',
+    paymentTerms: 'Net 30',
+    priceBook: 'Distributor Price Book',
+    customerPO: 'PO-2025-00847'
+  };
+
   // Sample product data with inventory and ATP information
-  const products = [
+  const products = useMemo(() => [
     {
       id: 'P001',
       name: 'GLB Custom Witch Hazel 2335 5X GL',
+      bpItemCode: 'LBC-WH-2335',
       code: 'GLB-2335.5D',
       sapCode: 'GLB-2335.5D',
       family: 'Botanical',
@@ -42,9 +68,9 @@ const OpportunityProductsMockup = () => {
           { name: '06 - Vigon', available: 40, allocated: 40, leadTime: '5 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-001', expiration: '2026-06-15', quantity: 100, status: 'Good' },
-          { number: 'BATCH-2024-002', expiration: '2025-03-20', quantity: 80, status: 'Short Expiration' },
-          { number: 'BATCH-2024-003', expiration: '2027-01-10', quantity: 65, status: 'Good' }
+          { number: '01-121125-10161-001', expiration: '2026-06-15', quantity: 100, status: 'Good', binLocation: '01-210-A' },
+          { number: '01-121025-10158-018', expiration: '2025-03-20', quantity: 80, status: 'Short Expiration', binLocation: '01-212-B' },
+          { number: '01-121525-10167-018', expiration: '2027-01-10', quantity: 65, status: 'Good', binLocation: '01-213-A' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -53,6 +79,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P002',
       name: 'GreenGard PA3',
+      bpItemCode: 'LBC-GG-PA3',
       code: 'GLE-10069',
       sapCode: 'GLE-10069',
       family: 'GreenGard',
@@ -68,8 +95,8 @@ const OpportunityProductsMockup = () => {
           { name: '03 - FMI', available: 5, allocated: 5, leadTime: '7 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-PA-001', expiration: '2025-02-28', quantity: 30, status: 'Short Expiration' },
-          { number: 'BATCH-2024-PA-002', expiration: '2026-08-15', quantity: 15, status: 'Good' }
+          { number: '01-120525-10142-005', expiration: '2025-02-28', quantity: 30, status: 'Short Expiration', binLocation: '01-309-A' },
+          { number: '01-121025-10159-018', expiration: '2026-08-15', quantity: 15, status: 'Good', binLocation: '01-106-B' }
         ]
       },
       defaultATP: 'In Stock – Expiration Short',
@@ -78,6 +105,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P003',
       name: 'GreenSens P30 MB',
+      bpItemCode: 'LBC-GS-P30MB',
       code: 'GLE-10095',
       sapCode: 'GLE-10095',
       family: 'GreenSens',
@@ -93,7 +121,7 @@ const OpportunityProductsMockup = () => {
           { name: '07 - Samples/R&D', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: [
-          { number: 'BATCH-2024-P30-001', expiration: 'N/A', quantity: 8, status: 'Good' }
+          { number: '01-120825-10110-180', expiration: 'N/A', quantity: 8, status: 'Good', binLocation: '01-COMPOUND' }
         ]
       },
       defaultATP: 'Needs Production',
@@ -102,6 +130,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P004',
       name: 'ElderMax BF',
+      bpItemCode: 'LBC-EM-BF',
       code: 'GLA-11005',
       sapCode: 'GLA-11005',
       family: 'Actives',
@@ -124,6 +153,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P005',
       name: 'GLB Royal Jelly 10GLY',
+      bpItemCode: 'LBC-RJ-10GLY',
       code: 'BH6300',
       sapCode: 'BH6300',
       family: 'Standards',
@@ -146,6 +176,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P006',
       name: 'GreenSolv Clear',
+      bpItemCode: 'LBC-GSOLV-CLR',
       code: 'GLE-10081',
       sapCode: 'GLE-10081',
       family: 'GreenSolv',
@@ -161,8 +192,8 @@ const OpportunityProductsMockup = () => {
           { name: '03 - FMI', available: 20, allocated: 10, leadTime: '5 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-GS-101', expiration: '2027-03-15', quantity: 120, status: 'Good' },
-          { number: 'BATCH-2024-GS-102', expiration: '2026-09-30', quantity: 60, status: 'Good' }
+          { number: '06-041625-8506-018', expiration: '2027-03-15', quantity: 120, status: 'Good', binLocation: '01-211-A' },
+          { number: '06-041625-8506-180', expiration: '2026-09-30', quantity: 60, status: 'Good', binLocation: '01-207-A' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -171,6 +202,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P007',
       name: 'GreenWax GL',
+      bpItemCode: 'LBC-GWAX-GL',
       code: 'GLE-10054-020',
       sapCode: 'GLE-10054-020',
       family: 'GreenWax',
@@ -186,7 +218,7 @@ const OpportunityProductsMockup = () => {
           { name: '01 - Hazlet', available: 5, allocated: 5, leadTime: '4 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-WX-501', expiration: 'N/A', quantity: 65, status: 'Good' }
+          { number: '01-121525-10201-005', expiration: 'N/A', quantity: 65, status: 'Good', binLocation: '01-213-B' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -195,6 +227,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P008',
       name: 'GreenSoft PG5O',
+      bpItemCode: 'LBC-GSOFT-PG5O',
       code: 'GLE-10050',
       sapCode: 'GLE-10050',
       family: 'GreenSoft',
@@ -210,7 +243,7 @@ const OpportunityProductsMockup = () => {
           { name: '02 - Crown', available: 4, allocated: 4, leadTime: '6 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-SF-201', expiration: '2026-01-20', quantity: 32, status: 'Good' }
+          { number: '01-120925-10153-005', expiration: '2026-01-20', quantity: 32, status: 'Good', binLocation: '01-309-B' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -219,6 +252,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P009',
       name: 'Imbue Shea MB',
+      bpItemCode: 'LBC-IMBUE-SHEA',
       code: 'GLE-10101',
       sapCode: 'GLE-10101',
       family: 'Imbue',
@@ -234,7 +268,7 @@ const OpportunityProductsMockup = () => {
           { name: '07 - Samples/R&D', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: [
-          { number: 'BATCH-2024-IM-301', expiration: '2025-04-10', quantity: 15, status: 'Short Expiration' }
+          { number: '01-030725-8665-018', expiration: '2025-04-10', quantity: 15, status: 'Short Expiration', binLocation: '01-311-B' }
         ]
       },
       defaultATP: 'In Stock – Expiration Short',
@@ -243,6 +277,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P010',
       name: 'GLB Radigard SF',
+      bpItemCode: 'LBC-RG-SF',
       code: 'GLB-10003',
       sapCode: 'GLB-10003',
       family: 'Radigard',
@@ -258,8 +293,8 @@ const OpportunityProductsMockup = () => {
           { name: '08 - Maine', available: 8, allocated: 5, leadTime: '4 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-RG-401', expiration: '2026-12-31', quantity: 50, status: 'Good' },
-          { number: 'BATCH-2024-RG-402', expiration: '2025-06-15', quantity: 38, status: 'Short Expiration' }
+          { number: '01-120325-10127-018', expiration: '2026-12-31', quantity: 50, status: 'Good', binLocation: '01-210-B' },
+          { number: '01-121125-10164-005', expiration: '2025-06-15', quantity: 38, status: 'Short Expiration', binLocation: '01-FLOOR-01-A' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -268,6 +303,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P011',
       name: 'GLE Green Tea Catechins',
+      bpItemCode: 'LBC-GT-CATCH',
       code: 'GLE-10114',
       sapCode: 'GLE-10114',
       family: 'Essential Other',
@@ -283,7 +319,7 @@ const OpportunityProductsMockup = () => {
           { name: '07 - Samples/R&D', available: 2, allocated: 2, leadTime: '5 days' }
         ],
         batches: [
-          { number: 'BATCH-2024-GT-601', expiration: '2026-07-22', quantity: 22, status: 'Good' }
+          { number: '01-120325-10130-018', expiration: '2026-07-22', quantity: 22, status: 'Good', binLocation: '01-113-A' }
         ]
       },
       defaultATP: 'Available to Ship',
@@ -292,6 +328,7 @@ const OpportunityProductsMockup = () => {
     {
       id: 'P012',
       name: 'Vivify Plus',
+      bpItemCode: 'LBC-VIV-PLUS',
       code: 'GLA-11006',
       sapCode: 'GLA-11006',
       family: 'Actives',
@@ -307,21 +344,36 @@ const OpportunityProductsMockup = () => {
           { name: '08 - Maine', available: 0, allocated: 0, leadTime: 'N/A' }
         ],
         batches: [
-          { number: 'BATCH-2024-VP-701', expiration: '2025-05-30', quantity: 12, status: 'Short Expiration' }
+          { number: '01-042325-9008-005', expiration: '2025-05-30', quantity: 12, status: 'Short Expiration', binLocation: '01-310-B' }
         ]
       },
       defaultATP: 'In Stock – Expiration Short',
       stockLevel: 'critical'
+    },
+    {
+      id: 'P013',
+      name: 'GreenEmulse Pro',
+      bpItemCode: 'LBC-GEMUL-PRO',
+      code: 'GLE-10205',
+      sapCode: 'GLE-10205',
+      family: 'GreenSens',
+      description: 'Advanced emulsifier for natural formulations',
+      active: true,
+      inventory: {
+        totalOnHand: 0,
+        orderedByCustomers: 45,
+        orderedFromVendors: 100,
+        warehouses: [
+          { name: '01 - Hazlet', available: 0, allocated: 0, leadTime: '7 days' },
+          { name: '02 - Crown', available: 0, allocated: 0, leadTime: '7 days' },
+          { name: '06 - Vigon', available: 0, allocated: 0, leadTime: '7 days' }
+        ],
+        batches: []
+      },
+      defaultATP: 'Needs Production',
+      stockLevel: 'out'
     }
-  ];
-
-  const atpStatuses = [
-    { id: 'available', label: 'Available to Ship', value: 'Available to Ship' },
-    { id: 'expiration-short', label: 'In Stock – Expiration Short', value: 'In Stock – Expiration Short' },
-    { id: 'needs-production', label: 'Needs Production', value: 'Needs Production' },
-    { id: 'needs-materials', label: 'Needs Raw Materials', value: 'Needs Raw Materials' },
-    { id: 'backordered', label: 'Backordered / Not Available', value: 'Backordered / Not Available' }
-  ];
+  ], []);
 
   const steps = [
     { id: 0, label: 'Search Products' },
@@ -357,20 +409,215 @@ const OpportunityProductsMockup = () => {
     return 'error';
   };
 
+  // Map product families to main categories
+  const getCategoryForFamily = (family) => {
+    const categoryMap = {
+      'Actives': 'Actives',
+      'Botanical': 'Botanicals',
+      'Essential Other': 'Essentials',
+      'GreenGard': 'Essentials',
+      'GreenSens': 'Essentials',
+      'GreenSolv': 'Essentials',
+      'GreenSoft': 'Essentials',
+      'GreenWax': 'Essentials',
+      'Imbue': 'Essentials',
+      'Radigard': 'Botanicals',
+      'Standards': 'Botanicals'
+    };
+    return categoryMap[family] || 'Essentials';
+  };
+
+  // Shelf life calculation helper functions
+  const calculateRemainingShelfLife = (expirationDate) => {
+    if (expirationDate === 'N/A') return null;
+    const today = new Date();
+    const expDate = new Date(expirationDate);
+    const diffTime = expDate - today;
+    const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
+    return diffMonths;
+  };
+
+  const getBatchComplianceStatus = useCallback((batch) => {
+    const remainingMonths = calculateRemainingShelfLife(batch.expiration);
+    const required = customerAccount.requirements.shelfLifeMinimum;
+
+    if (remainingMonths === null) {
+      return {
+        status: 'Good',
+        color: 'success',
+        message: 'No expiration date',
+        compliant: true
+      };
+    }
+
+    if (remainingMonths >= required) {
+      return {
+        status: 'Good',
+        color: 'success',
+        message: `${remainingMonths} months remaining`,
+        compliant: true
+      };
+    }
+
+    return {
+      status: 'Does Not Meet Requirements',
+      color: 'error',
+      message: `Only ${remainingMonths} months remaining - Customer requires ${required} months`,
+      compliant: false
+    };
+  }, [customerAccount.requirements.shelfLifeMinimum]);
+
   const filteredProducts = products.filter(p => {
     const matchesSearch = searchTerm === '' ||
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sapCode.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || p.family === categoryFilter;
+      p.sapCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.bpItemCode.toLowerCase().includes(searchTerm.toLowerCase());
+    const productCategory = getCategoryForFamily(p.family);
+    const matchesCategory = categoryFilter === 'all' || productCategory === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
+  // Memoized handler for updating line item fields
+  const updateLineItem = useCallback((productId, field, value) => {
+    setLineItems(prevLineItems => {
+      const updatedItem = {
+        ...prevLineItems[productId],
+        [field]: value
+      };
+
+      // Auto-update unit price when pack size changes
+      if (field === 'packSize') {
+        const selectedPackSize = packSizes.find(ps => ps.size === value);
+        if (selectedPackSize) {
+          updatedItem.unitPrice = selectedPackSize.pricePerKg;
+        }
+      }
+
+      return {
+        ...prevLineItems,
+        [productId]: updatedItem
+      };
+    });
+  }, []);
+
+  // Customer Info Panel Component
+  const CustomerInfoPanel = useMemo(() => (
+    <div style={{ border: '1px solid #dddbda', borderRadius: '4px', overflow: 'hidden' }}>
+      <div style={{ padding: '16px', backgroundColor: '#e8f4f8', borderLeft: '4px solid #0176d3' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <Icon category="standard" name="account" size="small" />
+          <h3 className="slds-text-heading_small" style={{ margin: 0 }}>
+            Customer Account: {customerAccount.name}
+          </h3>
+        </div>
+        <div style={{ marginLeft: '32px' }}>
+          <div style={{ display: 'flex', gap: '24px', marginBottom: '4px' }}>
+            <div className="slds-text-body_small" style={{ color: '#706e6b' }}>
+              Business Partner #: {customerAccount.businessPartnerNumber}
+            </div>
+            <div className="slds-text-body_small" style={{ color: '#706e6b' }}>
+              Balance: <span style={{ fontWeight: 'bold', color: customerAccount.daysOverdue > 0 ? '#c23934' : '#080707' }}>
+                ${customerAccount.accountBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            {customerAccount.daysOverdue > 0 && (
+              <div className="slds-text-body_small" style={{ color: '#c23934', fontWeight: 'bold' }}>
+                {customerAccount.daysOverdue} days overdue
+              </div>
+            )}
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            <strong className="slds-text-body_small" style={{ display: 'block', marginBottom: '8px' }}>
+              Customer Requirements:
+            </strong>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                  Minimum Shelf Life
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold', color: '#0176d3' }}>
+                  {customerAccount.requirements.shelfLifeMinimum} months
+                </div>
+              </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                  Quality Standards
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                  {customerAccount.requirements.qualityStandards}
+                </div>
+              </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                  Packaging
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                  {customerAccount.requirements.packagingRequirements}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ), [customerAccount.name, customerAccount.businessPartnerNumber, customerAccount.accountBalance, customerAccount.daysOverdue, customerAccount.requirements]);
+
+  // Opportunity Info Panel Component
+  const OpportunityInfoPanel = useMemo(() => (
+    <div style={{ border: '1px solid #dddbda', borderRadius: '4px', overflow: 'hidden' }}>
+      <div style={{ padding: '16px', backgroundColor: '#f0f3f5', borderLeft: '4px solid #706e6b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <Icon category="standard" name="opportunity" size="small" />
+          <h3 className="slds-text-heading_small" style={{ margin: 0 }}>
+            Opportunity: {opportunity.name}
+          </h3>
+        </div>
+        <div style={{ marginLeft: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            <div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                Customer Reference Number
+              </div>
+              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                {opportunity.customerPO}
+              </div>
+            </div>
+            <div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                Close Date
+              </div>
+              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                {new Date(opportunity.closeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+            <div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                Payment Terms
+              </div>
+              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                {opportunity.paymentTerms}
+              </div>
+            </div>
+            <div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                Price Book
+              </div>
+              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                {opportunity.priceBook}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ), [opportunity.name, opportunity.customerPO, opportunity.closeDate, opportunity.paymentTerms, opportunity.priceBook]);
+
   // Step 0: Product Search Screen
-  const ProductSearchScreen = () => (
+  const ProductSearchScreen = useMemo(() => (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 className="slds-text-heading_medium" style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <h2 className="slds-text-heading_medium" style={{ marginBottom: '4px' }}>
           Search and Select Products
         </h2>
         <p className="slds-text-body_regular" style={{ color: '#706e6b' }}>
@@ -379,9 +626,8 @@ const OpportunityProductsMockup = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card heading="">
-        <div style={{ padding: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '16px', marginBottom: '16px' }}>
+      <div style={{ border: '1px solid #dddbda', borderRadius: '4px', padding: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '16px', marginBottom: '12px' }}>
             <div>
               <label className="slds-form-element__label" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
                 Search Products
@@ -395,9 +641,10 @@ const OpportunityProductsMockup = () => {
                   className="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default"
                 />
                 <input
+                  id="product-search"
                   type="text"
                   className="slds-input"
-                  placeholder="Search by name, product code, or SAP code..."
+                  placeholder="Search by name, BP item code, product code, or SAP code..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -408,36 +655,28 @@ const OpportunityProductsMockup = () => {
                 Product Family
               </label>
               <select
+                id="category-filter"
                 className="slds-select"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
-                <option value="all">All Families</option>
+                <option value="all">All Categories</option>
                 <option value="Actives">Actives</option>
-                <option value="Botanical">Botanical</option>
-                <option value="Essential Other">Essential Other</option>
-                <option value="GreenGard">GreenGard</option>
-                <option value="GreenSens">GreenSens</option>
-                <option value="GreenSolv">GreenSolv</option>
-                <option value="GreenSoft">GreenSoft</option>
-                <option value="GreenWax">GreenWax</option>
-                <option value="Imbue">Imbue</option>
-                <option value="Radigard">Radigard</option>
-                <option value="Standards">Standards</option>
+                <option value="Botanicals">Botanicals</option>
+                <option value="Essentials">Essentials</option>
               </select>
             </div>
           </div>
 
-          {/* Results count */}
-          <div style={{ fontSize: '14px', color: '#706e6b', marginBottom: '8px' }}>
-            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-            {selectedProducts.length > 0 && ` • ${selectedProducts.length} selected`}
-          </div>
+        {/* Results count */}
+        <div style={{ fontSize: '14px', color: '#706e6b' }}>
+          {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
+          {selectedProducts.length > 0 && ` • ${selectedProducts.length} selected`}
         </div>
-      </Card>
+      </div>
 
       {/* Product Results Table */}
-      <div style={{ marginTop: '16px' }}>
+      <div style={{ marginTop: '12px' }}>
         <Card heading="">
           <div style={{ padding: '0' }}>
             <table className="slds-table slds-table_bordered slds-table_cell-buffer">
@@ -451,6 +690,9 @@ const OpportunityProductsMockup = () => {
                   </th>
                   <th scope="col" style={{ padding: '12px' }}>
                     <div className="slds-truncate">Code</div>
+                  </th>
+                  <th scope="col" style={{ padding: '12px' }}>
+                    <div className="slds-truncate">BP Item Code</div>
                   </th>
                   <th scope="col" style={{ padding: '12px' }}>
                     <div className="slds-truncate">SAP Code</div>
@@ -488,6 +730,9 @@ const OpportunityProductsMockup = () => {
                       <div className="slds-truncate">{product.code}</div>
                     </td>
                     <td style={{ padding: '12px' }}>
+                      <div className="slds-truncate">{product.bpItemCode}</div>
+                    </td>
+                    <td style={{ padding: '12px' }}>
                       <div className="slds-truncate">{product.sapCode}</div>
                     </td>
                     <td style={{ padding: '12px' }}>
@@ -520,9 +765,12 @@ const OpportunityProductsMockup = () => {
               const product = products.find(p => p.id === productId);
               newLineItems[productId] = {
                 quantity: 1,
-                unitPrice: 0,
+                packSize: '5kg',
+                unitPrice: 42.00,
                 warehouse: product.inventory.warehouses[0]?.name || '',
-                atpStatus: product.defaultATP
+                atpStatus: product.defaultATP,
+                endCustomer: '',
+                dueDate: ''
               };
             });
             setLineItems(newLineItems);
@@ -531,10 +779,11 @@ const OpportunityProductsMockup = () => {
         />
       </div>
     </div>
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [filteredProducts, selectedProducts, products, searchTerm, categoryFilter]);
 
   // Step 1: Inventory Status Display
-  const InventoryStatusScreen = () => (
+  const InventoryStatusScreen = useMemo(() => (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 className="slds-text-heading_medium" style={{ marginBottom: '8px' }}>
@@ -549,6 +798,11 @@ const OpportunityProductsMockup = () => {
         const product = products.find(p => p.id === productId);
         const isExpanded = expandedProduct === productId;
 
+        // Check if product has any non-compliant batches
+        const hasNonCompliantBatches = product.inventory.batches.some(
+          batch => !getBatchComplianceStatus(batch).compliant
+        );
+
         return (
           <Card key={productId} heading="" style={{ marginBottom: '16px' }}>
             <div style={{ padding: '16px' }}>
@@ -559,6 +813,9 @@ const OpportunityProductsMockup = () => {
                     <h3 className="slds-text-heading_small">{product.name}</h3>
                     {getStockLevelBadge(product.stockLevel)}
                     <Badge color={getATPBadgeColor(product.defaultATP)} content={product.defaultATP} />
+                    {hasNonCompliantBatches && (
+                      <Badge color="error" content="Shelf Life Warning" />
+                    )}
                   </div>
                   <div className="slds-text-body_small" style={{ color: '#706e6b' }}>
                     {product.code} • {product.sapCode}
@@ -570,6 +827,18 @@ const OpportunityProductsMockup = () => {
                   onClick={() => setExpandedProduct(isExpanded ? null : productId)}
                 />
               </div>
+
+              {/* Shelf Life Compliance Alert */}
+              {hasNonCompliantBatches && (
+                <Alert
+                  labels={{ heading: 'Some batches do not meet customer shelf life requirements' }}
+                  variant="warning"
+                  style={{ marginBottom: '16px' }}
+                >
+                  This product has batches with less than {customerAccount.requirements.shelfLifeMinimum} months remaining shelf life.
+                  Review batch details below to ensure selected batches meet customer requirements.
+                </Alert>
+              )}
 
               {/* Inventory Summary */}
               <div style={{
@@ -657,10 +926,13 @@ const OpportunityProductsMockup = () => {
               {/* Batch Details (Expandable) */}
               {isExpanded && (
                 <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#fef8e8', borderRadius: '4px', border: '1px solid #ddaa00' }}>
-                  <h4 className="slds-text-heading_small" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h4 className="slds-text-heading_small" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Icon category="utility" name="date_input" size="x-small" />
                     Batch & Expiration Details
                   </h4>
+                  <div className="slds-text-body_small" style={{ color: '#706e6b', marginBottom: '12px', fontStyle: 'italic' }}>
+                    Customer requires minimum {customerAccount.requirements.shelfLifeMinimum} months remaining shelf life
+                  </div>
                   {product.inventory.batches.length === 0 ? (
                     <p className="slds-text-body_small" style={{ color: '#706e6b' }}>
                       No batch information available for this product.
@@ -673,36 +945,65 @@ const OpportunityProductsMockup = () => {
                             <div className="slds-truncate">Batch Number</div>
                           </th>
                           <th scope="col" style={{ padding: '8px' }}>
+                            <div className="slds-truncate">Bin Location</div>
+                          </th>
+                          <th scope="col" style={{ padding: '8px' }}>
                             <div className="slds-truncate">Expiration Date</div>
                           </th>
                           <th scope="col" style={{ padding: '8px', textAlign: 'right' }}>
                             <div className="slds-truncate">Quantity</div>
                           </th>
                           <th scope="col" style={{ padding: '8px' }}>
-                            <div className="slds-truncate">Status</div>
+                            <div className="slds-truncate">Shelf Life Status</div>
+                          </th>
+                          <th scope="col" style={{ padding: '8px' }}>
+                            <div className="slds-truncate">Compliance</div>
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {product.inventory.batches.map((batch, idx) => (
-                          <tr key={idx}>
-                            <td style={{ padding: '8px' }}>
-                              <code style={{ fontSize: '13px' }}>{batch.number}</code>
-                            </td>
-                            <td style={{ padding: '8px' }}>
-                              {batch.expiration}
-                            </td>
-                            <td style={{ padding: '8px', textAlign: 'right' }}>
-                              {batch.quantity}
-                            </td>
-                            <td style={{ padding: '8px' }}>
-                              <Badge
-                                color={batch.status === 'Good' ? 'success' : 'warning'}
-                                content={batch.status}
-                              />
-                            </td>
-                          </tr>
-                        ))}
+                        {product.inventory.batches.map((batch, idx) => {
+                          const complianceStatus = getBatchComplianceStatus(batch);
+                          return (
+                            <tr key={idx} style={{ backgroundColor: complianceStatus.compliant ? 'transparent' : '#fef5f5' }}>
+                              <td style={{ padding: '8px' }}>
+                                <code style={{ fontSize: '13px' }}>{batch.number}</code>
+                              </td>
+                              <td style={{ padding: '8px' }}>
+                                <code style={{ fontSize: '12px', backgroundColor: '#f3f3f3', padding: '2px 6px', borderRadius: '3px' }}>
+                                  {batch.binLocation}
+                                </code>
+                              </td>
+                              <td style={{ padding: '8px' }}>
+                                {batch.expiration}
+                              </td>
+                              <td style={{ padding: '8px', textAlign: 'right' }}>
+                                {batch.quantity}
+                              </td>
+                              <td style={{ padding: '8px' }}>
+                                <div className="slds-text-body_small">
+                                  {complianceStatus.message}
+                                </div>
+                              </td>
+                              <td style={{ padding: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <Badge
+                                    color={complianceStatus.color}
+                                    content={complianceStatus.compliant ? 'Meets Requirements' : 'Does Not Meet'}
+                                  />
+                                  {!complianceStatus.compliant && (
+                                    <Icon
+                                      category="utility"
+                                      name="warning"
+                                      size="x-small"
+                                      style={{ fill: '#ea001e' }}
+                                    />
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   )}
@@ -727,10 +1028,11 @@ const OpportunityProductsMockup = () => {
         />
       </div>
     </div>
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [selectedProducts, products, expandedProduct, getBatchComplianceStatus, customerAccount.requirements.shelfLifeMinimum]);
 
   // Step 2: Line Item Configuration
-  const LineItemConfigurationScreen = () => (
+  const LineItemConfigurationScreen = useMemo(() => (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 className="slds-text-heading_medium" style={{ marginBottom: '8px' }}>
@@ -774,26 +1076,45 @@ const OpportunityProductsMockup = () => {
               )}
 
               {/* Configuration Form */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '16px' }}>
                 <Input
+                  id={`quantity-${productId}`}
                   label="Quantity"
                   type="number"
-                  value={lineItem.quantity || ''}
+                  value={lineItem.quantity === 0 ? '0' : (lineItem.quantity || '')}
                   onChange={(e) => {
-                    const newLineItems = { ...lineItems };
-                    newLineItems[productId] = {
-                      ...newLineItems[productId],
-                      quantity: parseInt(e.target.value) || 0
-                    };
-                    setLineItems(newLineItems);
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                    updateLineItem(productId, 'quantity', value);
                   }}
                   required
                   errorText={showWarning ? "Exceeds available inventory" : null}
                 />
                 <div>
-                  <label className="slds-form-element__label slds-form-element__label_required" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+                  <label className="slds-form-element__label slds-form-element__label_required" htmlFor={`pack-size-${productId}`} style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
                     <abbr className="slds-required" title="required">* </abbr>
-                    Unit Price
+                    Pack Size
+                  </label>
+                  <select
+                    id={`pack-size-${productId}`}
+                    className="slds-select"
+                    value={lineItem.packSize || ''}
+                    onChange={(e) => {
+                      updateLineItem(productId, 'packSize', e.target.value);
+                    }}
+                    required
+                  >
+                    <option value="">Select Pack Size...</option>
+                    {packSizes.map((ps, idx) => (
+                      <option key={idx} value={ps.size}>
+                        {ps.size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="slds-form-element__label slds-form-element__label_required" htmlFor={`unit-price-${productId}`} style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+                    <abbr className="slds-required" title="required">* </abbr>
+                    Unit Price (per kg)
                   </label>
                   <div className="slds-form-element__control">
                     <div className="slds-input-has-icon slds-input-has-icon_left">
@@ -801,17 +1122,15 @@ const OpportunityProductsMockup = () => {
                         <span style={{ fontSize: '14px', color: '#706e6b' }}>$</span>
                       </span>
                       <input
+                        id={`unit-price-${productId}`}
                         type="number"
+                        step="0.01"
                         className="slds-input"
                         style={{ paddingLeft: '1.75rem' }}
-                        value={lineItem.unitPrice || ''}
+                        value={lineItem.unitPrice === 0 ? '0' : (lineItem.unitPrice || '')}
                         onChange={(e) => {
-                          const newLineItems = { ...lineItems };
-                          newLineItems[productId] = {
-                            ...newLineItems[productId],
-                            unitPrice: parseFloat(e.target.value) || 0
-                          };
-                          setLineItems(newLineItems);
+                          const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                          updateLineItem(productId, 'unitPrice', value);
                         }}
                         required
                       />
@@ -819,20 +1138,16 @@ const OpportunityProductsMockup = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="slds-form-element__label slds-form-element__label_required" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
+                  <label className="slds-form-element__label slds-form-element__label_required" htmlFor={`warehouse-${productId}`} style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>
                     <abbr className="slds-required" title="required">* </abbr>
                     Warehouse
                   </label>
                   <select
+                    id={`warehouse-${productId}`}
                     className="slds-select"
                     value={lineItem.warehouse || ''}
                     onChange={(e) => {
-                      const newLineItems = { ...lineItems };
-                      newLineItems[productId] = {
-                        ...newLineItems[productId],
-                        warehouse: e.target.value
-                      };
-                      setLineItems(newLineItems);
+                      updateLineItem(productId, 'warehouse', e.target.value);
                     }}
                     required
                   >
@@ -846,13 +1161,57 @@ const OpportunityProductsMockup = () => {
                 </div>
               </div>
 
+              {/* Second row with Due Date */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                <Input
+                  id={`due-date-${productId}`}
+                  label="Due Date"
+                  type="date"
+                  value={lineItem.dueDate || ''}
+                  onChange={(e) => {
+                    updateLineItem(productId, 'dueDate', e.target.value);
+                  }}
+                />
+              </div>
+
+              {/* Additional Details Section */}
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <label className="slds-text-body_small" style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+                    Additional Details (Optional)
+                  </label>
+                </div>
+                <div>
+                  <Input
+                    id={`end-customer-${productId}`}
+                    label="End Customer"
+                    placeholder="Enter end customer name if different from account customer"
+                    value={lineItem.endCustomer || ''}
+                    onChange={(e) => {
+                      updateLineItem(productId, 'endCustomer', e.target.value);
+                    }}
+                    assistiveText={{
+                      label: 'Specify the end customer if this product is being resold or distributed to a different customer'
+                    }}
+                  />
+                </div>
+              </div>
+
               {/* Line Total */}
               <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f3f3f3', borderRadius: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="slds-text-heading_small">Line Item Total:</span>
                   <span className="slds-text-heading_medium">
-                    ${((lineItem.quantity || 0) * (lineItem.unitPrice || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${(() => {
+                      const qty = lineItem.quantity || 0;
+                      const packSizeKg = packSizes.find(ps => ps.size === lineItem.packSize)?.kg || 0;
+                      const unitPrice = lineItem.unitPrice || 0;
+                      return (qty * packSizeKg * unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    })()}
                   </span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#706e6b', marginTop: '4px' }}>
+                  {lineItem.quantity || 0} × {packSizes.find(ps => ps.size === lineItem.packSize)?.kg || 0}kg × ${(lineItem.unitPrice || 0).toFixed(2)}/kg
                 </div>
               </div>
             </div>
@@ -874,13 +1233,17 @@ const OpportunityProductsMockup = () => {
         />
       </div>
     </div>
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [selectedProducts, lineItems, products, updateLineItem]);
 
   // Step 3: Review & Confirm
-  const ReviewScreen = () => {
+  const ReviewScreen = useMemo(() => {
     const grandTotal = selectedProducts.reduce((sum, productId) => {
       const lineItem = lineItems[productId] || {};
-      return sum + ((lineItem.quantity || 0) * (lineItem.unitPrice || 0));
+      const qty = lineItem.quantity || 0;
+      const packSizeKg = packSizes.find(ps => ps.size === lineItem.packSize)?.kg || 0;
+      const unitPrice = lineItem.unitPrice || 0;
+      return sum + (qty * packSizeKg * unitPrice);
     }, 0);
 
     return (
@@ -905,14 +1268,23 @@ const OpportunityProductsMockup = () => {
                   <th scope="col" style={{ padding: '12px', textAlign: 'right' }}>
                     <div className="slds-truncate">Quantity</div>
                   </th>
+                  <th scope="col" style={{ padding: '12px' }}>
+                    <div className="slds-truncate">Pack Size</div>
+                  </th>
                   <th scope="col" style={{ padding: '12px', textAlign: 'right' }}>
-                    <div className="slds-truncate">Unit Price</div>
+                    <div className="slds-truncate">Unit Price (per kg)</div>
                   </th>
                   <th scope="col" style={{ padding: '12px' }}>
                     <div className="slds-truncate">Warehouse</div>
                   </th>
+                  <th scope="col" style={{ padding: '12px' }}>
+                    <div className="slds-truncate">Due Date</div>
+                  </th>
                   <th scope="col" style={{ padding: '12px', textAlign: 'right' }}>
                     <div className="slds-truncate">Total</div>
+                  </th>
+                  <th scope="col" style={{ padding: '12px' }}>
+                    <div className="slds-truncate">BP Item Code</div>
                   </th>
                 </tr>
               </thead>
@@ -920,7 +1292,10 @@ const OpportunityProductsMockup = () => {
                 {selectedProducts.map(productId => {
                   const product = products.find(p => p.id === productId);
                   const lineItem = lineItems[productId] || {};
-                  const total = (lineItem.quantity || 0) * (lineItem.unitPrice || 0);
+                  const qty = lineItem.quantity || 0;
+                  const packSizeKg = packSizes.find(ps => ps.size === lineItem.packSize)?.kg || 0;
+                  const unitPrice = lineItem.unitPrice || 0;
+                  const total = qty * packSizeKg * unitPrice;
 
                   return (
                     <tr key={productId}>
@@ -931,18 +1306,32 @@ const OpportunityProductsMockup = () => {
                         <div className="slds-text-body_small" style={{ color: '#706e6b', marginTop: '2px' }}>
                           {product.code}
                         </div>
+                        {lineItem.endCustomer && (
+                          <div className="slds-text-body_small" style={{ color: '#0176d3', marginTop: '4px', fontStyle: 'italic' }}>
+                            End Customer: {lineItem.endCustomer}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
-                        {lineItem.quantity || 0}
+                        {qty}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {lineItem.packSize || 'N/A'}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
-                        ${(lineItem.unitPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td style={{ padding: '12px' }}>
                         <div className="slds-truncate">{lineItem.warehouse || 'N/A'}</div>
                       </td>
+                      <td style={{ padding: '12px' }}>
+                        {lineItem.dueDate ? new Date(lineItem.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                      </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
                         <strong>${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <div className="slds-truncate">{product.bpItemCode}</div>
                       </td>
                     </tr>
                   );
@@ -950,7 +1339,7 @@ const OpportunityProductsMockup = () => {
               </tbody>
               <tfoot>
                 <tr style={{ backgroundColor: '#f3f3f3' }}>
-                  <td colSpan="4" style={{ padding: '12px', textAlign: 'right' }}>
+                  <td colSpan="7" style={{ padding: '12px', textAlign: 'right' }}>
                     <strong className="slds-text-heading_small">Grand Total:</strong>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>
@@ -990,7 +1379,7 @@ const OpportunityProductsMockup = () => {
         </div>
       </div>
     );
-  };
+  }, [selectedProducts, lineItems, products]);
 
   // Success Screen
   const SuccessScreen = () => (
@@ -1039,7 +1428,7 @@ const OpportunityProductsMockup = () => {
   // Main render
   if (showSuccess) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f3f3f3', paddingTop: '60px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f3f3f3' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', backgroundColor: 'white', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <SuccessScreen />
         </div>
@@ -1048,40 +1437,45 @@ const OpportunityProductsMockup = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f3f3', paddingTop: '60px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f3f3' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '4px 4px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h1 className="slds-text-heading_large" style={{ marginBottom: '8px' }}>
+        <div style={{ backgroundColor: 'white', padding: '24px 24px 16px 24px', borderRadius: '4px 4px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h1 className="slds-text-heading_large">
             Add Products to Opportunity
           </h1>
-          <p className="slds-text-body_regular" style={{ color: '#706e6b' }}>
-            Opportunity: Q1 2025 Industrial Equipment Deal
-          </p>
+        </div>
+
+        {/* Customer Info Panel */}
+        <div style={{ backgroundColor: 'white', padding: '0 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          {CustomerInfoPanel}
+        </div>
+
+        {/* Opportunity Info Panel */}
+        <div style={{ backgroundColor: 'white', padding: '16px 24px 24px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          {OpportunityInfoPanel}
         </div>
 
         {/* Progress Indicator */}
-        <div style={{ backgroundColor: 'white', padding: '0 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ backgroundColor: 'white', padding: '16px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <ProgressIndicator
             id="opportunity-products-progress"
-            selectedStep={currentStep}
+            selectedStep={steps[currentStep]}
             steps={steps}
             variant="base"
-            onStepClick={(event, data) => {
-              // Allow navigation to previous steps
-              if (data.step < currentStep) {
-                setCurrentStep(data.step);
-              }
+            completedSteps={Array.from({ length: currentStep }, (_, i) => steps[i])}
+            onStepClick={(event) => {
+              event.preventDefault();
             }}
           />
         </div>
 
         {/* Main Content */}
         <div style={{ backgroundColor: 'white', borderRadius: '0 0 4px 4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', minHeight: '500px' }}>
-          {currentStep === 0 && <ProductSearchScreen />}
-          {currentStep === 1 && <InventoryStatusScreen />}
-          {currentStep === 2 && <LineItemConfigurationScreen />}
-          {currentStep === 3 && <ReviewScreen />}
+          {currentStep === 0 && ProductSearchScreen}
+          {currentStep === 1 && InventoryStatusScreen}
+          {currentStep === 2 && LineItemConfigurationScreen}
+          {currentStep === 3 && ReviewScreen}
         </div>
       </div>
     </div>

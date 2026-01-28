@@ -495,20 +495,6 @@ const CampaignBuilderMockup = () => {
             </div>
           </div>
         </div>
-
-        {/* Implementation Note */}
-        <div className="slds-scoped-notification slds-media slds-media_center slds-theme_warning slds-m-top_medium" role="status">
-          <div className="slds-media__figure">
-            <Icon category="utility" name="warning" size="small" />
-          </div>
-          <div className="slds-media__body">
-            <p className="slds-text-body_small">
-              <strong>Implementation Note:</strong> This mockup uses SLDS React components.
-              The package selection cards would require a <strong>custom LWC flow screen component</strong> to achieve this layout.
-              Standard flow components (radio buttons, picklists) cannot display rich card layouts with included items.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

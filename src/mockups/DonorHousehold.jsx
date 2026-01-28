@@ -224,24 +224,54 @@ const DonorHousehold = () => {
       </div>
 
       {/* Giving Summary Cards */}
-      <div className="slds-grid slds-gutters slds-m-bottom_medium">
-        <div className="slds-col slds-size_1-of-4">
-          <Card hasNoHeader>
-            <div className="slds-p-around_medium" style={{ textAlign: 'center' }}>
-              <p className="slds-text-title slds-text-color_weak">Lifetime Giving</p>
-              <p className="slds-text-heading_large" style={{ color: '#0176d3', fontWeight: '700' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        {/* Lifetime Giving */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #dddbda',
+          borderRadius: '4px',
+          padding: '20px',
+          position: 'relative'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="utility" name="trending" size="x-small" style={{ fill: '#706e6b' }} />
+                <h3 className="slds-text-title" style={{ color: '#706e6b', fontSize: '13px', margin: 0 }}>
+                  Lifetime Giving
+                </h3>
+              </div>
+              <div className="slds-text-heading_large" style={{ fontSize: '32px', fontWeight: '300', marginBottom: '8px' }}>
                 {formatCurrency(household.lifetimeGiving)}
-              </p>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
-        <div className="slds-col slds-size_1-of-4">
-          <Card hasNoHeader>
-            <div className="slds-p-around_medium" style={{ textAlign: 'center' }}>
-              <p className="slds-text-title slds-text-color_weak">This Year</p>
-              <p className="slds-text-heading_large" style={{ color: '#2e844a', fontWeight: '700' }}>
+
+        {/* This Year */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #dddbda',
+          borderRadius: '4px',
+          padding: '20px',
+          position: 'relative'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="utility" name="date_input" size="x-small" style={{ fill: '#706e6b' }} />
+                <h3 className="slds-text-title" style={{ color: '#706e6b', fontSize: '13px', margin: 0 }}>
+                  This Year
+                </h3>
+              </div>
+              <div className="slds-text-heading_large" style={{ fontSize: '32px', fontWeight: '300', marginBottom: '8px' }}>
                 {formatCurrency(household.thisYearGiving)}
-              </p>
+              </div>
               <div className="slds-m-top_x-small">
                 <ProgressBar value={yearProgress} size="small" color="success" />
                 <p className="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
@@ -249,43 +279,76 @@ const DonorHousehold = () => {
                 </p>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
-        <div className="slds-col slds-size_1-of-4">
-          <Card hasNoHeader>
-            <div className="slds-p-around_medium" style={{ textAlign: 'center' }}>
-              <p className="slds-text-title slds-text-color_weak">Last Year</p>
-              <p className="slds-text-heading_large" style={{ color: '#706e6b', fontWeight: '700' }}>
+
+        {/* Last Year */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #dddbda',
+          borderRadius: '4px',
+          padding: '20px',
+          position: 'relative'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="utility" name="date_input" size="x-small" style={{ fill: '#706e6b' }} />
+                <h3 className="slds-text-title" style={{ color: '#706e6b', fontSize: '13px', margin: 0 }}>
+                  Last Year
+                </h3>
+              </div>
+              <div className="slds-text-heading_large" style={{ fontSize: '32px', fontWeight: '300', marginBottom: '8px' }}>
                 {formatCurrency(household.lastYearGiving)}
-              </p>
-              <p className="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
-                {household.thisYearGiving < household.lastYearGiving ? (
-                  <span style={{ color: '#ea001e' }}>
-                    <Icon category="utility" name="down" size="xx-small" style={{ fill: '#ea001e' }} />
-                    {' '}{Math.round((1 - household.thisYearGiving / household.lastYearGiving) * 100)}% vs last year
+              </div>
+              {household.thisYearGiving !== household.lastYearGiving && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Icon
+                    category="utility"
+                    name={household.thisYearGiving > household.lastYearGiving ? 'up' : 'down'}
+                    size="xx-small"
+                    style={{ fill: household.thisYearGiving > household.lastYearGiving ? '#2e844a' : '#ea001e' }}
+                  />
+                  <span style={{
+                    fontSize: '13px',
+                    color: household.thisYearGiving > household.lastYearGiving ? '#2e844a' : '#ea001e',
+                    fontWeight: 'bold'
+                  }}>
+                    {Math.abs(Math.round((household.thisYearGiving / household.lastYearGiving - 1) * 100))}%
                   </span>
-                ) : (
-                  <span style={{ color: '#2e844a' }}>
-                    <Icon category="utility" name="up" size="xx-small" style={{ fill: '#2e844a' }} />
-                    {' '}{Math.round((household.thisYearGiving / household.lastYearGiving - 1) * 100)}% vs last year
+                  <span style={{ fontSize: '12px', color: '#706e6b' }}>
+                    vs last year
                   </span>
-                )}
-              </p>
+                </div>
+              )}
             </div>
-          </Card>
+          </div>
         </div>
-        <div className="slds-col slds-size_1-of-4">
-          <Card hasNoHeader>
-            <div className="slds-p-around_medium" style={{ textAlign: 'center' }}>
-              <p className="slds-text-title slds-text-color_weak">Open Pledges</p>
-              <p className="slds-text-heading_large" style={{ color: '#5a1ba9', fontWeight: '700' }}>
+
+        {/* Open Pledges */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #dddbda',
+          borderRadius: '4px',
+          padding: '20px',
+          position: 'relative'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="utility" name="contract" size="x-small" style={{ fill: '#706e6b' }} />
+                <h3 className="slds-text-title" style={{ color: '#706e6b', fontSize: '13px', margin: 0 }}>
+                  Open Pledges
+                </h3>
+              </div>
+              <div className="slds-text-heading_large" style={{ fontSize: '32px', fontWeight: '300', marginBottom: '8px' }}>
                 $30,000
-              </p>
-              <p className="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+              </div>
+              <div style={{ fontSize: '12px', color: '#706e6b' }}>
                 1 active pledge
-              </p>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 

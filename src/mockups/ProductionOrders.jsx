@@ -7,14 +7,13 @@ import DataTableCell from '@salesforce/design-system-react/components/data-table
 import Badge from '@salesforce/design-system-react/components/badge';
 import Alert from '@salesforce/design-system-react/components/alert';
 import Icon from '@salesforce/design-system-react/components/icon';
-import Input from '@salesforce/design-system-react/components/input';
 import Combobox from '@salesforce/design-system-react/components/combobox';
 import Tabs from '@salesforce/design-system-react/components/tabs';
 import TabsPanel from '@salesforce/design-system-react/components/tabs/panel';
 import ProgressBar from '@salesforce/design-system-react/components/progress-bar';
-import ProgressIndicator from '@salesforce/design-system-react/components/progress-indicator';
+import Input from '@salesforce/design-system-react/components/input';
 
-const ProductionOrdersMockup = () => {
+const ProductionOrdersMockup = ({ productionLines = [], onIssueForProduction, onReceiveFromProduction, onDelayProduction, onUndelayProduction }) => {
   // State management
   const [currentView, setCurrentView] = useState('overview');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -23,22 +22,241 @@ const ProductionOrdersMockup = () => {
   const [warehouseFilter, setWarehouseFilter] = useState('all');
   const [expandedRows, setExpandedRows] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
+  const [expandedComponent, setExpandedComponent] = useState(null);
 
-  // Sample data - Production Orders with all 7 scenarios
-  const productionOrders = [
+  // CM Requirements state
+  const [requirements, setRequirements] = useState([
+    {
+      id: 'req-1',
+      type: 'batch_report',
+      name: 'Batch Report Emailed',
+      description: 'Email batch production report for this batch',
+      status: 'completed',
+      completedDate: '2025-01-15',
+      completedBy: 'Kelly Skochil',
+      notes: 'Batch report sent via email on 1/15/2025'
+    },
+    {
+      id: 'req-2',
+      type: 'sample',
+      name: 'Pre-ship Sample Sent to Hazlet',
+      description: 'Send pre-production sample to Hazlet facility for QA approval',
+      status: 'completed',
+      completedDate: '2025-01-12',
+      completedBy: 'Kelly Skochil',
+      notes: 'Sample shipped via FedEx tracking #789456123'
+    },
+    {
+      id: 'req-3',
+      type: 'coa',
+      name: 'COA Sent Electronically',
+      description: 'Certificate of Analysis sent via email in PDF format',
+      status: 'pending',
+      completedDate: null,
+      completedBy: null,
+      notes: null
+    },
+    {
+      id: 'req-4',
+      type: 'label_approval',
+      name: 'Label Approval',
+      description: 'Final label design approved before printing',
+      status: 'completed',
+      completedDate: '2025-01-08',
+      completedBy: 'John Smith (Internal)',
+      notes: 'Approved label design v3 - meets FDA requirements'
+    }
+  ]);
+
+  const [expandedReq, setExpandedReq] = useState(null);
+  const [editingNote, setEditingNote] = useState(null);
+  const [tempNote, setTempNote] = useState('');
+
+  const cmProductionOrder = {
+    contractManufacturer: 'Koster Keunen',
+    quantity: 500,
+    uom: 'KG'
+  };
+
+  // CM Helper functions
+  const getStatusColor = (status) => {
+    const colorMap = {
+      completed: '#2e844a',
+      pending: '#fe9339',
+      skipped: '#706e6b',
+      'n/a': '#706e6b'
+    };
+    return colorMap[status] || colorMap.pending;
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      completed: { color: 'success', label: 'Completed', icon: 'success' },
+      pending: { color: 'warning', label: 'Pending', icon: 'clock' },
+      skipped: { color: 'light', label: 'Skipped', icon: 'skip' },
+      'n/a': { color: 'light', label: 'N/A', icon: 'ban' }
+    };
+    return statusConfig[status] || statusConfig.pending;
+  };
+
+  const getRequirementIcon = (type) => {
+    const iconMap = {
+      'batch_report': 'page',
+      'sample': 'product',
+      'coa': 'approval',
+      'label_approval': 'record_create'
+    };
+    return iconMap[type] || 'task';
+  };
+
+  const calculateProgress = () => {
+    const total = requirements.length;
+    const completed = requirements.filter(r => r.status === 'completed').length;
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  };
+
+  const handleStatusChange = (reqId, newStatus) => {
+    setRequirements(prev => prev.map(req => {
+      if (req.id === reqId) {
+        return {
+          ...req,
+          status: newStatus,
+          completedDate: newStatus === 'completed' ? new Date().toISOString().split('T')[0] : null,
+          completedBy: newStatus === 'completed' ? 'Current User' : null
+        };
+      }
+      return req;
+    }));
+  };
+
+  const handleNoteEdit = (reqId) => {
+    const req = requirements.find(r => r.id === reqId);
+    setTempNote(req.notes || '');
+    setEditingNote(reqId);
+  };
+
+  const handleNoteSave = (reqId) => {
+    setRequirements(prev => prev.map(req => {
+      if (req.id === reqId) {
+        return { ...req, notes: tempNote };
+      }
+      return req;
+    }));
+    setEditingNote(null);
+    setTempNote('');
+  };
+
+  const handleNoteCancel = () => {
+    setEditingNote(null);
+    setTempNote('');
+  };
+
+  const toggleExpand = (reqId) => {
+    setExpandedReq(expandedReq === reqId ? null : reqId);
+  };
+
+  const progress = calculateProgress();
+  const allCompleted = progress === 100;
+
+  // Component Card wrapper
+  const ComponentCard = ({ title, children, icon, iconCategory = 'standard', actions }) => (
+    <div style={{
+      backgroundColor: 'white',
+      border: '2px solid #0176d3',
+      borderRadius: '4px',
+      padding: '20px',
+      marginBottom: '24px',
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '-12px',
+        left: '16px',
+        backgroundColor: '#0176d3',
+        color: 'white',
+        padding: '4px 12px',
+        borderRadius: '4px',
+        fontSize: '11px',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
+      }}>
+        Component
+      </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {icon && <Icon category={iconCategory} name={icon} size="small" />}
+          <h3 className="slds-text-heading_small" style={{ margin: 0 }}>{title}</h3>
+        </div>
+        {actions && <div>{actions}</div>}
+      </div>
+      {children}
+    </div>
+  );
+
+  // Sample customer and opportunity data
+  const customerAccount = {
+    name: 'Luxe Beauty Corporation',
+    businessPartnerNumber: '10234',
+    accountBalance: 24567.89,
+    daysOverdue: 15
+  };
+
+  const opportunity = {
+    name: 'Q1 2025 Industrial Equipment Deal',
+    opportunityNumber: 'OPP-2025-0042',
+    closeDate: '2025-03-31',
+    amount: 125000.00,
+    stage: 'Negotiation'
+  };
+
+  // Transform productionLines prop to match expected format
+  const productionOrders = productionLines.map((pl, index) => ({
+    id: pl.id,
+    orderNumber: pl.productionOrderNumber,
+    status: pl.status === 'not-started' ? 'Not Started' :
+            pl.status === 'in-progress' ? 'In Progress' :
+            pl.status === 'completed' ? 'Completed' :
+            pl.status === 'delayed' ? 'Delayed' :
+            pl.status === 'blocked' ? 'Blocked' : 'Not Started',
+    product: {
+      code: pl.itemCode,
+      name: pl.productName,
+      description: ''
+    },
+    plannedQty: pl.orderedQuantity,
+    actualQty: pl.producedQty || 0,
+    uom: pl.uom,
+    startDate: pl.scheduledDate || null,
+    dueDate: pl.estimatedCompletion,
+    priority: pl.priority,
+    warehouse: pl.warehouse,
+    materialStatus: 'available',
+    owner: pl.operator,
+    notes: pl.notes || '',
+    components: []
+  }));
+
+  // Keep the old mock data structure for reference but use empty array
+  const _oldProductionOrders = [
     // Scenario 1: Ready to Start
     {
       id: '1',
       orderNumber: 'PO-2024-0015',
       status: 'Released',
       product: {
-        code: 'FG-LOTION-100',
-        name: 'Moisturizing Lotion 100ml',
-        description: 'Hydrating body lotion with vitamin E and aloe vera'
+        code: 'GLB-2335.5D',
+        name: 'GLB Custom Witch Hazel 2335 5X GL',
+        description: 'Custom formulated witch hazel extract with enhanced potency'
       },
       plannedQty: 500,
       actualQty: 0,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-20',
       dueDate: '2024-12-27',
       priority: 'High',
@@ -61,6 +279,10 @@ const ProductionOrdersMockup = () => {
           warehouses: [
             { name: '01 - Hazlet', available: 130, allocated: 20, leadTime: '0 days' },
             { name: '02 - Crown', available: 50, allocated: 10, leadTime: '1 day' }
+          ],
+          batches: [
+            { number: '01-120524-10143-001', expiration: '2026-12-05', quantity: 50, binLocation: '01-105-C' },
+            { number: '01-111824-10087-002', expiration: '2026-11-18', quantity: 80, binLocation: '01-105-A' }
           ]
         },
         {
@@ -76,6 +298,9 @@ const ProductionOrdersMockup = () => {
           reserved: 5,
           warehouses: [
             { name: '01 - Hazlet', available: 20, allocated: 5, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-121225-10201-001', expiration: '2026-12-12', quantity: 25, binLocation: '01-210-B' }
           ]
         },
         {
@@ -91,6 +316,9 @@ const ProductionOrdersMockup = () => {
           reserved: 500,
           warehouses: [
             { name: '01 - Hazlet', available: 1500, allocated: 500, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-110824-PKG100-001', expiration: 'N/A', quantity: 2000, binLocation: '01-PKG-02' }
           ]
         }
       ]
@@ -101,13 +329,13 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0012',
       status: 'In Production',
       product: {
-        code: 'FG-CREAM-50',
-        name: 'Anti-Aging Cream 50g',
-        description: 'Premium anti-aging face cream with retinol and peptides'
+        code: 'GLE-10069',
+        name: 'GreenGard PA3',
+        description: 'Broad spectrum preservative for personal care applications'
       },
       plannedQty: 300,
       actualQty: 180,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-15',
       dueDate: '2024-12-22',
       priority: 'Medium',
@@ -126,7 +354,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 80,
-          reserved: 15
+          reserved: 15,
+          warehouses: [
+            { name: '01 - Hazlet', available: 65, allocated: 15, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-113024-10122-001', expiration: '2026-11-30', quantity: 80, binLocation: '01-302-A' }
+          ]
         },
         {
           id: 'c2-2',
@@ -138,7 +372,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 5,
-          reserved: 1
+          reserved: 1,
+          warehouses: [
+            { name: '01 - Hazlet', available: 4, allocated: 1, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-121024-10155-002', expiration: '2026-12-10', quantity: 5, binLocation: '01-408-C' }
+          ]
         }
       ]
     },
@@ -148,9 +388,9 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0018',
       status: 'Planned',
       product: {
-        code: 'FG-SERUM-30',
-        name: 'Vitamin C Serum 30ml',
-        description: 'Brightening serum with 20% vitamin C and hyaluronic acid'
+        code: 'GLE-10095',
+        name: 'GreenSens P30 MB',
+        description: 'Emollient ester with excellent sensory properties'
       },
       plannedQty: 200,
       actualQty: 0,
@@ -173,7 +413,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '02 - Crown',
           availabilityStatus: 'Available',
           onHand: 15,
-          reserved: 3
+          reserved: 3,
+          warehouses: [
+            { name: '02 - Crown', available: 12, allocated: 3, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '02-120224-10095-001', expiration: '2026-12-02', quantity: 15, binLocation: '02-301-A' }
+          ]
         },
         {
           id: 'c3-2',
@@ -187,7 +433,11 @@ const ProductionOrdersMockup = () => {
           onHand: 0,
           reserved: 0,
           leadTime: '5 days',
-          supplier: 'Premium Ingredients Inc.'
+          supplier: 'Premium Ingredients Inc.',
+          warehouses: [
+            { name: '02 - Crown', available: 0, allocated: 0, leadTime: '5 days' }
+          ],
+          batches: []
         },
         {
           id: 'c3-3',
@@ -199,7 +449,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '02 - Crown',
           availabilityStatus: 'Available',
           onHand: 2,
-          reserved: 0.5
+          reserved: 0.5,
+          warehouses: [
+            { name: '02 - Crown', available: 1.5, allocated: 0.5, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '02-121524-10178-001', expiration: '2026-12-15', quantity: 2, binLocation: '02-405-B' }
+          ]
         }
       ]
     },
@@ -209,13 +465,13 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0016',
       status: 'Released',
       product: {
-        code: 'FG-TONER-200',
-        name: 'Rose Water Toner 200ml',
-        description: 'Refreshing facial toner with rose water and witch hazel'
+        code: 'GLA-11005',
+        name: 'ElderMax BF',
+        description: 'Elder berry fruit extract with antioxidant benefits'
       },
       plannedQty: 400,
       actualQty: 0,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-21',
       dueDate: '2024-12-28',
       priority: 'Medium',
@@ -234,7 +490,14 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Partial',
           onHand: 40,
-          reserved: 10
+          reserved: 10,
+          warehouses: [
+            { name: '01 - Hazlet', available: 30, allocated: 10, leadTime: '0 days' },
+            { name: '02 - Crown', available: 0, allocated: 0, leadTime: '3 days' }
+          ],
+          batches: [
+            { number: '01-111224-10145-001', expiration: '2026-11-12', quantity: 40, binLocation: '01-205-A' }
+          ]
         },
         {
           id: 'c4-2',
@@ -246,7 +509,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 50,
-          reserved: 8
+          reserved: 8,
+          warehouses: [
+            { name: '01 - Hazlet', available: 42, allocated: 8, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-120124-10138-002', expiration: '2026-12-01', quantity: 50, binLocation: '01-206-B' }
+          ]
         },
         {
           id: 'c4-3',
@@ -258,7 +527,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 1500,
-          reserved: 200
+          reserved: 200,
+          warehouses: [
+            { name: '01 - Hazlet', available: 1300, allocated: 200, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-111024-10099-001', expiration: 'N/A', quantity: 1500, binLocation: '01-PKG-01' }
+          ]
         }
       ]
     },
@@ -268,13 +543,13 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0010',
       status: 'In Production',
       product: {
-        code: 'FG-MASK-75',
-        name: 'Clay Mask 75g',
-        description: 'Purifying clay mask with activated charcoal'
+        code: 'BH6300',
+        name: 'GLB Royal Jelly 10GLY',
+        description: 'Royal jelly extract in glycerin for skin nourishment'
       },
       plannedQty: 150,
       actualQty: 85,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-10',
       dueDate: '2024-12-18',
       priority: 'High',
@@ -293,7 +568,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '02 - Crown',
           availabilityStatus: 'Available',
           onHand: 25,
-          reserved: 5
+          reserved: 5,
+          warehouses: [
+            { name: '02 - Crown', available: 20, allocated: 5, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '02-110524-10092-001', expiration: '2027-11-05', quantity: 25, binLocation: '02-501-C' }
+          ]
         },
         {
           id: 'c5-2',
@@ -305,7 +586,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '02 - Crown',
           availabilityStatus: 'Partial',
           onHand: 1.2,
-          reserved: 0.5
+          reserved: 0.5,
+          warehouses: [
+            { name: '02 - Crown', available: 0.7, allocated: 0.5, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '02-112024-10105-002', expiration: '2027-11-20', quantity: 1.2, binLocation: '02-502-A' }
+          ]
         }
       ]
     },
@@ -315,13 +602,13 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0008',
       status: 'Closed',
       product: {
-        code: 'FG-CLEANSER-150',
-        name: 'Gentle Cleanser 150ml',
-        description: 'pH-balanced facial cleanser for sensitive skin'
+        code: 'GLE-10081',
+        name: 'GreenSolv Clear',
+        description: 'Natural solvent for cosmetic formulations'
       },
       plannedQty: 250,
       actualQty: 250,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-05',
       dueDate: '2024-12-12',
       completionDate: '2024-12-11',
@@ -339,7 +626,13 @@ const ProductionOrdersMockup = () => {
           issuedQty: 35,
           uom: 'L',
           warehouse: '01 - Hazlet',
-          availabilityStatus: 'Available'
+          availabilityStatus: 'Available',
+          warehouses: [
+            { name: '01 - Hazlet', available: 0, allocated: 0, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-120224-10088-001', expiration: '2026-12-02', quantity: 0, binLocation: '01-307-B' }
+          ]
         }
       ]
     },
@@ -349,9 +642,9 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0014',
       status: 'Cancelled',
       product: {
-        code: 'FG-SCRUB-100',
-        name: 'Exfoliating Scrub 100g',
-        description: 'Gentle exfoliating scrub with apricot seeds'
+        code: 'GLE-10054-020',
+        name: 'GreenWax GL',
+        description: 'Plant-based wax for texture and stability'
       },
       plannedQty: 100,
       actualQty: 0,
@@ -371,13 +664,13 @@ const ProductionOrdersMockup = () => {
       orderNumber: 'PO-2024-0019',
       status: 'Planned',
       product: {
-        code: 'FG-SUNSCREEN-50',
-        name: 'SPF 50 Sunscreen 50ml',
-        description: 'Broad spectrum mineral sunscreen'
+        code: 'GLE-10050',
+        name: 'GreenSoft PG5O',
+        description: 'Plant-based emollient for soft skin feel'
       },
       plannedQty: 350,
       actualQty: 0,
-      uom: 'EA',
+      uom: 'KG',
       startDate: '2024-12-26',
       dueDate: '2025-01-05',
       priority: 'Low',
@@ -396,7 +689,14 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 50,
-          reserved: 10
+          reserved: 10,
+          warehouses: [
+            { name: '01 - Hazlet', available: 40, allocated: 10, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-121024-10220-001', expiration: '2027-12-10', quantity: 30, binLocation: '01-601-A' },
+            { number: '01-110524-10220-002', expiration: '2027-11-05', quantity: 20, binLocation: '01-601-B' }
+          ]
         },
         {
           id: 'c8-2',
@@ -408,7 +708,13 @@ const ProductionOrdersMockup = () => {
           warehouse: '01 - Hazlet',
           availabilityStatus: 'Available',
           onHand: 30,
-          reserved: 5
+          reserved: 5,
+          warehouses: [
+            { name: '01 - Hazlet', available: 25, allocated: 5, leadTime: '0 days' }
+          ],
+          batches: [
+            { number: '01-112024-10225-001', expiration: '2027-11-20', quantity: 30, binLocation: '01-602-C' }
+          ]
         }
       ]
     }
@@ -488,6 +794,11 @@ const ProductionOrdersMockup = () => {
       'Planned': 'light',
       'Released': 'warning',
       'In Production': 'light',
+      'Not Started': 'light',
+      'In Progress': 'light',
+      'Completed': 'success',
+      'Delayed': 'error',
+      'Blocked': 'error',
       'Closed': 'success',
       'Cancelled': 'error'
     };
@@ -566,6 +877,11 @@ const ProductionOrdersMockup = () => {
     const matchesWarehouse = warehouseFilter === 'all' || order.warehouse === warehouseFilter;
 
     return matchesSearch && matchesStatus && matchesWarehouse;
+  }).sort((a, b) => {
+    // Sort by Start Date, most recent first
+    const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+    const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+    return dateB - dateA; // Most recent first (descending)
   });
 
   // Navigation handlers
@@ -632,6 +948,26 @@ const ProductionOrdersMockup = () => {
   );
   QuantityCell.displayName = DataTableCell.displayName;
 
+  const DueDateCell = ({ item }) => {
+    const overdue = isOverdue(item);
+    return (
+      <DataTableCell>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{
+            color: overdue ? '#c23934' : undefined,
+            fontWeight: overdue ? '500' : undefined
+          }}>
+            {item.dueDate}
+          </span>
+          {overdue && (
+            <Icon category="utility" name="warning" size="x-small" colorVariant="error" />
+          )}
+        </div>
+      </DataTableCell>
+    );
+  };
+  DueDateCell.displayName = DataTableCell.displayName;
+
   const PriorityCell = ({ item }) => (
     <DataTableCell>
       <Badge color={getPriorityBadgeColor(item.priority)} content={item.priority} />
@@ -657,6 +993,87 @@ const ProductionOrdersMockup = () => {
   );
   MaterialStatusCell.displayName = DataTableCell.displayName;
 
+  const ActionsCell = ({ item }) => {
+    const handleIssue = () => {
+      if (onIssueForProduction) {
+        onIssueForProduction(item);
+      }
+    };
+
+    const handleReceive = () => {
+      if (onReceiveFromProduction) {
+        onReceiveFromProduction(item);
+      }
+    };
+
+    const handleDelay = () => {
+      if (onDelayProduction) {
+        onDelayProduction(item);
+      }
+    };
+
+    const handleUndelay = () => {
+      if (onUndelayProduction) {
+        onUndelayProduction(item);
+      }
+    };
+
+    return (
+      <DataTableCell>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {item.status === 'Not Started' && (
+            <div style={{
+              display: 'inline-block',
+              '--sds-c-button-brand-color-background': '#fe9339',
+              '--sds-c-button-brand-color-background-hover': '#dd7a00',
+              '--sds-c-button-brand-color-border': '#fe9339'
+            }}>
+              <Button
+                label="Issue"
+                variant="brand"
+                iconCategory="utility"
+                iconName="right"
+                iconPosition="left"
+                onClick={handleIssue}
+              />
+            </div>
+          )}
+          {item.status === 'In Progress' && (
+            <>
+              <Button
+                label="Receive"
+                variant="success"
+                iconCategory="utility"
+                iconName="left"
+                iconPosition="left"
+                onClick={handleReceive}
+              />
+              <Button
+                label="Delay"
+                variant="destructive"
+                iconCategory="utility"
+                iconName="clock"
+                iconPosition="left"
+                onClick={handleDelay}
+              />
+            </>
+          )}
+          {item.status === 'Delayed' && (
+            <Button
+              label="Undelay"
+              variant="brand"
+              iconCategory="utility"
+              iconName="forward"
+              iconPosition="left"
+              onClick={handleUndelay}
+            />
+          )}
+        </div>
+      </DataTableCell>
+    );
+  };
+  ActionsCell.displayName = DataTableCell.displayName;
+
   const ComponentNameCell = ({ item }) => (
     <DataTableCell>
       <div>
@@ -676,38 +1093,47 @@ const ProductionOrdersMockup = () => {
 
   // Render Overview Screen
   const renderOverview = () => (
-    <div className="slds-p-around_large" style={{ backgroundColor: '#f3f3f3', minHeight: '100vh' }}>
-      <Card
-        heading="Production Orders"
-        icon={<Icon category="standard" name="orders" />}
-        headerActions={
-          <Button label="New Production Order" variant="brand" disabled />
-        }
-      >
+    <div>
         {/* Search and Filter Controls */}
         <div className="slds-p-around_medium slds-border_bottom">
           <div className="slds-grid slds-wrap slds-gutters">
             <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-              <Input
-                iconLeft={<Icon category="utility" name="search" size="x-small" />}
-                placeholder="Search orders or products..."
-                value={searchTerm}
-                onChange={(e, { value }) => setSearchTerm(value)}
-              />
+              <div className="slds-form-element">
+                <label className="slds-form-element__label" htmlFor="search-input">
+                  Search
+                </label>
+                <div className="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+                  <Icon
+                    assistiveText={{ label: 'Search' }}
+                    category="utility"
+                    name="search"
+                    size="x-small"
+                    className="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default"
+                  />
+                  <input
+                    id="search-input"
+                    type="text"
+                    className="slds-input"
+                    placeholder="Search orders or products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
             <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
               <Combobox
                 labels={{ label: 'Status' }}
                 options={[
                   { id: 'all', label: 'All Statuses' },
-                  { id: 'Planned', label: 'Planned' },
-                  { id: 'Released', label: 'Released' },
-                  { id: 'In Production', label: 'In Production' },
-                  { id: 'Closed', label: 'Closed' },
-                  { id: 'Cancelled', label: 'Cancelled' }
+                  { id: 'Not Started', label: 'Not Started' },
+                  { id: 'In Progress', label: 'In Progress' },
+                  { id: 'Completed', label: 'Completed' },
+                  { id: 'Delayed', label: 'Delayed' },
+                  { id: 'Blocked', label: 'Blocked' }
                 ]}
                 selection={[{ id: statusFilter, label: statusFilter === 'all' ? 'All Statuses' : statusFilter }]}
-                onSelect={(event, data) => {
+                onSelect={(_event, data) => {
                   setStatusFilter(data.selection[0]?.id || 'all');
                 }}
                 variant="readonly"
@@ -723,7 +1149,7 @@ const ProductionOrdersMockup = () => {
                   { id: '03 - FMI', label: '03 - FMI' }
                 ]}
                 selection={[{ id: warehouseFilter, label: warehouseFilter === 'all' ? 'All Warehouses' : warehouseFilter }]}
-                onSelect={(event, data) => {
+                onSelect={(_event, data) => {
                   setWarehouseFilter(data.selection[0]?.id || 'all');
                 }}
                 variant="readonly"
@@ -733,7 +1159,8 @@ const ProductionOrdersMockup = () => {
         </div>
 
         {/* Production Orders DataTable */}
-        <DataTable items={filteredOrders} id="production-orders-table">
+        <div style={{ overflowX: 'auto' }}>
+          <DataTable items={filteredOrders} id="production-orders-table">
           <DataTableColumn label="Order Number" property="orderNumber" width="10rem">
             <OrderNumberCell />
           </DataTableColumn>
@@ -747,7 +1174,9 @@ const ProductionOrdersMockup = () => {
             <QuantityCell />
           </DataTableColumn>
           <DataTableColumn label="Start Date" property="startDate" width="8rem" />
-          <DataTableColumn label="Due Date" property="dueDate" width="8rem" />
+          <DataTableColumn label="Due Date" property="dueDate" width="8rem">
+            <DueDateCell />
+          </DataTableColumn>
           <DataTableColumn label="Priority" property="priority" width="7rem">
             <PriorityCell />
           </DataTableColumn>
@@ -755,7 +1184,11 @@ const ProductionOrdersMockup = () => {
           <DataTableColumn label="Material Status" property="materialStatus" width="10rem">
             <MaterialStatusCell />
           </DataTableColumn>
+          <DataTableColumn label="Actions" property="actions" width="13rem">
+            <ActionsCell />
+          </DataTableColumn>
         </DataTable>
+        </div>
 
         {filteredOrders.length === 0 && (
           <div className="slds-p-around_large slds-text-align_center">
@@ -766,7 +1199,6 @@ const ProductionOrdersMockup = () => {
             </p>
           </div>
         )}
-      </Card>
     </div>
   );
 
@@ -774,7 +1206,6 @@ const ProductionOrdersMockup = () => {
   const renderDetailView = () => {
     if (!selectedOrder) return null;
 
-    const progressData = getProgressSteps(selectedOrder.status);
     const progressPercentage = selectedOrder.plannedQty > 0
       ? Math.round((selectedOrder.actualQty / selectedOrder.plannedQty) * 100)
       : 0;
@@ -815,126 +1246,238 @@ const ProductionOrdersMockup = () => {
           </Alert>
         )}
 
-        {/* Header Card */}
-        <Card
-          icon={<Icon category="standard" name="orders" />}
-          heading={
-            <div className="slds-grid slds-grid_vertical-align-center">
-              <Button
-                iconCategory="utility"
-                iconName="back"
-                iconSize="large"
-                variant="icon"
-                assistiveText={{ icon: 'Back to Overview' }}
-                onClick={handleBackToOverview}
-                className="slds-m-right_small"
-              />
-              <span>{selectedOrder.orderNumber}</span>
+        {/* Header Section */}
+        <div style={{ border: '1px solid #dddbda', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ padding: '16px', backgroundColor: '#f0f3f5', borderLeft: '4px solid #706e6b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Button
+                  iconCategory="utility"
+                  iconName="back"
+                  iconSize="large"
+                  variant="icon"
+                  assistiveText={{ icon: 'Back to Overview' }}
+                  onClick={handleBackToOverview}
+                />
+                <Icon category="standard" name="orders" size="small" />
+                <h3 className="slds-text-heading_small" style={{ margin: 0 }}>
+                  Production Order: {selectedOrder.orderNumber}
+                </h3>
+              </div>
+              <div className="slds-button-group">
+                <Button label="Issue Materials" variant="brand" disabled />
+                <Button label="Complete Order" variant="success" disabled />
+                <Button label="Cancel" variant="destructive" disabled />
+              </div>
             </div>
-          }
-          headerActions={
-            <div className="slds-button-group">
-              <Button label="Issue Materials" variant="brand" disabled />
-              <Button label="Complete Order" variant="success" disabled />
-              <Button label="Cancel" variant="destructive" disabled />
+          </div>
+          <div style={{ padding: '16px' }}>
+            {/* Product Information */}
+            <div style={{ marginBottom: '16px' }}>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                Product
+              </div>
+              <div className="slds-text-heading_medium" style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                {selectedOrder.product.name}
+              </div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b' }}>
+                {selectedOrder.product.code}
+              </div>
+              <div className="slds-text-body_small" style={{ color: '#706e6b', marginTop: '4px' }}>
+                {selectedOrder.product.description}
+              </div>
             </div>
-          }
-        >
-          <div className="slds-p-around_medium">
-            {/* Product and Status Section */}
-            <div className="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
-              <div className="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
-                <div className="slds-m-bottom_small">
-                  <div className="slds-text-title slds-text-color_weak">Product</div>
-                  <div className="slds-text-heading_medium" style={{ fontWeight: 'bold' }}>
-                    {selectedOrder.product.name}
-                  </div>
-                  <div className="slds-text-body_regular slds-text-color_weak">
-                    {selectedOrder.product.code}
-                  </div>
-                  <div className="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
-                    {selectedOrder.product.description}
-                  </div>
+
+            {/* Status and Details Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Status
+                </div>
+                <Badge
+                  color={getStatusBadgeColor(selectedOrder.status)}
+                  content={selectedOrder.status}
+                />
+              </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Priority
+                </div>
+                <Badge color={getPriorityBadgeColor(selectedOrder.priority)} content={selectedOrder.priority} />
+              </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Warehouse
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                  {selectedOrder.warehouse}
                 </div>
               </div>
-              <div className="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                <div className="slds-m-bottom_small">
-                  <div className="slds-text-title slds-text-color_weak">Status</div>
-                  <div className="slds-m-top_xx-small">
-                    <Badge
-                      color={getStatusBadgeColor(selectedOrder.status)}
-                      content={selectedOrder.status}
-                      style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}
-                    />
-                  </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Owner
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                  {selectedOrder.owner}
                 </div>
               </div>
             </div>
 
-            {/* Progress Bar */}
+            {/* Dates Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Start Date
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                  {selectedOrder.startDate}
+                </div>
+              </div>
+              <div>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Due Date
+                </div>
+                <div className="slds-text-body_small" style={{ fontWeight: 'bold', color: isOverdue(selectedOrder) ? '#c23934' : undefined }}>
+                  {selectedOrder.dueDate}
+                  {isOverdue(selectedOrder) && (
+                    <Icon category="utility" name="warning" size="x-small" colorVariant="error" style={{ marginLeft: '4px' }} />
+                  )}
+                </div>
+              </div>
+              {selectedOrder.completionDate && (
+                <div>
+                  <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                    Completed
+                  </div>
+                  <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                    {selectedOrder.completionDate}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Production Progress */}
             {selectedOrder.status !== 'Cancelled' && (
-              <div className="slds-m-bottom_medium">
-                <div className="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
-                  <span className="slds-text-title slds-text-color_weak">Production Progress</span>
-                  <span className="slds-text-body_regular" style={{ fontWeight: '500' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                    Production Progress
+                  </div>
+                  <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
                     {selectedOrder.actualQty} / {selectedOrder.plannedQty} {selectedOrder.uom} ({progressPercentage}%)
-                  </span>
+                  </div>
                 </div>
                 <ProgressBar value={progressPercentage} color={progressPercentage === 100 ? 'success' : undefined} />
               </div>
             )}
 
-            {/* Details Grid */}
-            <div className="slds-grid slds-wrap slds-gutters">
-              <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                <div className="slds-text-title slds-text-color_weak">Start Date</div>
-                <div className="slds-text-body_regular">{selectedOrder.startDate}</div>
-              </div>
-              <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                <div className="slds-text-title slds-text-color_weak">Due Date</div>
-                <div className="slds-text-body_regular" style={{
-                  color: isOverdue(selectedOrder) ? '#c23934' : undefined,
-                  fontWeight: isOverdue(selectedOrder) ? '500' : undefined
-                }}>
-                  {selectedOrder.dueDate}
-                  {isOverdue(selectedOrder) && (
-                    <Icon category="utility" name="warning" size="x-small" colorVariant="error" className="slds-m-left_xx-small" />
-                  )}
-                </div>
-              </div>
-              {selectedOrder.completionDate && (
-                <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                  <div className="slds-text-title slds-text-color_weak">Completed</div>
-                  <div className="slds-text-body_regular">{selectedOrder.completionDate}</div>
-                </div>
-              )}
-              <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                <div className="slds-text-title slds-text-color_weak">Priority</div>
-                <div className="slds-text-body_regular">
-                  <Badge color={getPriorityBadgeColor(selectedOrder.priority)} content={selectedOrder.priority} />
-                </div>
-              </div>
-              <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                <div className="slds-text-title slds-text-color_weak">Warehouse</div>
-                <div className="slds-text-body_regular">{selectedOrder.warehouse}</div>
-              </div>
-              <div className="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                <div className="slds-text-title slds-text-color_weak">Owner</div>
-                <div className="slds-text-body_regular">{selectedOrder.owner}</div>
-              </div>
-            </div>
-
             {/* Notes */}
             {selectedOrder.notes && (
-              <div className="slds-m-top_medium">
-                <div className="slds-text-title slds-text-color_weak slds-m-bottom_xx-small">Notes</div>
-                <div className="slds-box slds-box_small">
+              <div style={{ marginTop: '16px' }}>
+                <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                  Notes
+                </div>
+                <div style={{ padding: '8px 12px', backgroundColor: '#f3f3f3', borderRadius: '4px', fontSize: '13px' }}>
                   {selectedOrder.notes}
                 </div>
               </div>
             )}
           </div>
-        </Card>
+        </div>
+
+        {/* Customer Account Panel */}
+        <div className="slds-m-top_medium">
+          <div style={{ border: '1px solid #dddbda', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ padding: '16px', backgroundColor: '#e8f4f8', borderLeft: '4px solid #0176d3' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="standard" name="account" size="small" />
+                <h3 className="slds-text-heading_small" style={{ margin: 0 }}>
+                  Customer Account: {customerAccount.name}
+                </h3>
+              </div>
+              <div style={{ marginLeft: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Business Partner #
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                      {customerAccount.businessPartnerNumber}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Account Balance
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold', color: customerAccount.daysOverdue > 0 ? '#c23934' : '#080707' }}>
+                      ${customerAccount.accountBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  {customerAccount.daysOverdue > 0 && (
+                    <div>
+                      <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                        Days Overdue
+                      </div>
+                      <div className="slds-text-body_small" style={{ color: '#c23934', fontWeight: 'bold' }}>
+                        {customerAccount.daysOverdue} days
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Opportunity Panel */}
+        <div className="slds-m-top_medium">
+          <div style={{ border: '1px solid #dddbda', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ padding: '16px', backgroundColor: '#f0f3f5', borderLeft: '4px solid #706e6b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Icon category="standard" name="opportunity" size="small" />
+                <h3 className="slds-text-heading_small" style={{ margin: 0 }}>
+                  Opportunity: {opportunity.name}
+                </h3>
+              </div>
+              <div style={{ marginLeft: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Opportunity #
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                      {opportunity.opportunityNumber}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Close Date
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                      {new Date(opportunity.closeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Amount
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                      ${opportunity.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px' }}>
+                      Stage
+                    </div>
+                    <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                      {opportunity.stage}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Tabs Section */}
         <div className="slds-m-top_medium">
@@ -943,73 +1486,193 @@ const ProductionOrdersMockup = () => {
             selectedIndex={activeTab}
             onSelect={(index) => setActiveTab(index)}
           >
-            <TabsPanel label="Summary">
-              <div className="slds-p-around_medium">
-                {/* Progress Indicator */}
-                <Card heading="Production Stages">
-                  <div className="slds-p-around_medium">
-                    <ProgressIndicator
-                      steps={progressData.steps}
-                      selectedStep={progressData.currentStep}
-                      variant="base"
-                    />
-                  </div>
-                </Card>
-              </div>
-            </TabsPanel>
-
             <TabsPanel label="Components">
               <div className="slds-p-around_medium">
-                <Card heading="Component Materials">
-                  {selectedOrder.components.length > 0 ? (
-                    <DataTable items={selectedOrder.components} id="components-table">
-                      <DataTableColumn label="Component" property="name" width="15rem">
-                        <ComponentNameCell />
-                      </DataTableColumn>
-                      <DataTableColumn label="Planned Qty" property="plannedQty" width="8rem">
-                        <DataTableCell>
-                          {(item) => `${item.plannedQty} ${item.uom}`}
-                        </DataTableCell>
-                      </DataTableColumn>
-                      <DataTableColumn label="Issued Qty" property="issuedQty" width="8rem">
-                        <DataTableCell>
-                          {(item) => `${item.issuedQty} ${item.uom}`}
-                        </DataTableCell>
-                      </DataTableColumn>
-                      <DataTableColumn label="Remaining" property="remaining" width="8rem">
-                        <DataTableCell>
-                          {(item) => `${calculateRemainingQty(item)} ${item.uom}`}
-                        </DataTableCell>
-                      </DataTableColumn>
-                      <DataTableColumn label="Warehouse" property="warehouse" width="10rem" />
-                      <DataTableColumn label="Availability" property="availabilityStatus" width="10rem">
-                        <AvailabilityStatusCell />
-                      </DataTableColumn>
-                      <DataTableColumn label="On Hand" property="onHand" width="8rem">
-                        <DataTableCell>
-                          {(item) => item.onHand !== undefined ? `${item.onHand} ${item.uom}` : '-'}
-                        </DataTableCell>
-                      </DataTableColumn>
-                    </DataTable>
-                  ) : (
-                    <div className="slds-p-around_large slds-text-align_center">
-                      <p className="slds-text-body_regular slds-text-color_weak">
-                        No components defined for this production order
-                      </p>
-                    </div>
-                  )}
-                </Card>
+                {selectedOrder.components.length > 0 ? (
+                  selectedOrder.components.map((component) => {
+                    const isExpanded = expandedComponent === component.id;
+                    const remainingQty = calculateRemainingQty(component);
 
-                {/* Expandable inventory details could be added here in a future enhancement */}
-                {selectedOrder.components.some(c => c.warehouses) && (
-                  <div className="slds-m-top_medium">
-                    <Card heading="Warehouse Availability Details">
-                      <div className="slds-p-around_medium">
-                        <p className="slds-text-body_small slds-text-color_weak">
-                          Click on individual components above to view detailed warehouse breakdown and batch information.
-                        </p>
-                      </div>
-                    </Card>
+                    return (
+                      <Card key={component.id} heading="" style={{ marginBottom: '16px' }}>
+                        <div style={{ padding: '16px' }}>
+                          {/* Component Header */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                                <h3 className="slds-text-heading_small">{component.name}</h3>
+                                <Badge color={getAvailabilityBadgeColor(component.availabilityStatus)} content={component.availabilityStatus} />
+                              </div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b' }}>
+                                {component.itemCode}
+                              </div>
+                            </div>
+                            <Button
+                              label={isExpanded ? "Hide Details" : "View Details"}
+                              variant="neutral"
+                              onClick={() => setExpandedComponent(isExpanded ? null : component.id)}
+                            />
+                          </div>
+
+                          {/* Component Summary Grid */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px', padding: '12px', backgroundColor: '#f3f3f3', borderRadius: '4px' }}>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                Planned Qty
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {component.plannedQty} {component.uom}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                Issued Qty
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {component.issuedQty} {component.uom}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                Remaining
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {remainingQty} {component.uom}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                Warehouse
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {component.warehouse}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                On Hand
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {component.onHand !== undefined ? `${component.onHand} ${component.uom}` : '-'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="slds-text-body_small" style={{ color: '#706e6b', fontSize: '11px', marginBottom: '4px' }}>
+                                Reserved
+                              </div>
+                              <div className="slds-text-body_small" style={{ fontWeight: 'bold' }}>
+                                {component.reserved !== undefined ? `${component.reserved} ${component.uom}` : '-'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expandable Batch Details */}
+                          {isExpanded && (
+                            <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#fef8e8', borderRadius: '4px', border: '1px solid #ddaa00' }}>
+                              <h4 className="slds-text-heading_small" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Icon category="utility" name="date_input" size="x-small" />
+                                Batch & Expiration Details
+                              </h4>
+                              {component.batches && component.batches.length > 0 ? (
+                                <table className="slds-table slds-table_bordered slds-table_cell-buffer">
+                                  <thead>
+                                    <tr className="slds-line-height_reset">
+                                      <th scope="col" style={{ padding: '8px' }}>
+                                        <div className="slds-truncate">Batch Number</div>
+                                      </th>
+                                      <th scope="col" style={{ padding: '8px' }}>
+                                        <div className="slds-truncate">Bin Location</div>
+                                      </th>
+                                      <th scope="col" style={{ padding: '8px' }}>
+                                        <div className="slds-truncate">Expiration Date</div>
+                                      </th>
+                                      <th scope="col" style={{ padding: '8px', textAlign: 'right' }}>
+                                        <div className="slds-truncate">Quantity</div>
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {component.batches.map((batch, idx) => (
+                                      <tr key={idx}>
+                                        <td style={{ padding: '8px' }}>
+                                          <code style={{ fontSize: '13px' }}>{batch.number}</code>
+                                        </td>
+                                        <td style={{ padding: '8px' }}>
+                                          <code style={{ fontSize: '12px', backgroundColor: '#f3f3f3', padding: '2px 6px', borderRadius: '3px' }}>
+                                            {batch.binLocation}
+                                          </code>
+                                        </td>
+                                        <td style={{ padding: '8px' }}>
+                                          {batch.expiration}
+                                        </td>
+                                        <td style={{ padding: '8px', textAlign: 'right' }}>
+                                          {batch.quantity}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p className="slds-text-body_small" style={{ color: '#706e6b', fontStyle: 'italic' }}>
+                                  No batch information available - material not in stock
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Warehouse Breakdown */}
+                          {isExpanded && component.warehouses && component.warehouses.length >= 1 && (
+                            <div style={{ marginTop: '16px' }}>
+                              <h4 className="slds-text-heading_small" style={{ marginBottom: '12px' }}>
+                                Warehouse Breakdown
+                              </h4>
+                              <table className="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                  <tr className="slds-line-height_reset">
+                                    <th scope="col" style={{ padding: '8px' }}>
+                                      <div className="slds-truncate">Warehouse</div>
+                                    </th>
+                                    <th scope="col" style={{ padding: '8px', textAlign: 'right' }}>
+                                      <div className="slds-truncate">Available</div>
+                                    </th>
+                                    <th scope="col" style={{ padding: '8px', textAlign: 'right' }}>
+                                      <div className="slds-truncate">Allocated</div>
+                                    </th>
+                                    <th scope="col" style={{ padding: '8px' }}>
+                                      <div className="slds-truncate">Lead Time</div>
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {component.warehouses.map((wh, idx) => (
+                                    <tr key={idx}>
+                                      <td style={{ padding: '8px', fontWeight: '500' }}>
+                                        {wh.name}
+                                      </td>
+                                      <td style={{ padding: '8px', textAlign: 'right' }}>
+                                        {wh.available}
+                                      </td>
+                                      <td style={{ padding: '8px', textAlign: 'right' }}>
+                                        {wh.allocated}
+                                      </td>
+                                      <td style={{ padding: '8px' }}>
+                                        {wh.leadTime}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="slds-p-around_large slds-text-align_center">
+                    <p className="slds-text-body_regular slds-text-color_weak">
+                      No components defined for this production order
+                    </p>
                   </div>
                 )}
               </div>
@@ -1021,7 +1684,7 @@ const ProductionOrdersMockup = () => {
                   <div className="slds-p-around_medium">
                     {/* Vertical Timeline */}
                     <ul className="slds-timeline">
-                      {getActivityTimeline(selectedOrder).map((activity, index) => (
+                      {getActivityTimeline(selectedOrder).map((activity) => (
                         <li key={activity.id} className="slds-timeline__item">
                           <span className="slds-assistive-text">{activity.type}</span>
                           <div className="slds-media">
