@@ -18,6 +18,7 @@ import OpportunitySAPComponents from './OpportunitySAPComponents';
 import StripeComponents from './StripeComponents';
 import OpportunityComponents from './OpportunityComponents';
 import INNExplorer from './INNExplorer';
+import ProjectionSummary from './ProjectionSummary';
 
 // Simple deterministic hash function to generate consistent share IDs
 const generateShareId = (str) => {
@@ -137,6 +138,12 @@ const mockupsBase = [
     name: 'Contact Components (INN)',
     description: 'INN (donor intelligence) data explorer with filtering by DS Rating, State, and Capacity - linked to Salesforce Contacts',
     component: INNExplorer,
+  },
+  {
+    id: 'projection-summary',
+    name: 'Account Components (Projections)',
+    description: 'Projection summary with collapsible installment tracking, confidence scoring, and progress visualization for Account pages',
+    component: ProjectionSummary,
   },
 ];
 
